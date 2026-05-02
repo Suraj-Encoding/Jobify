@@ -264,7 +264,13 @@ const RecruiterDashboard = ({ userData }) => {
                         <p className="text-gray-600 mt-1">Manage your job postings and applications</p>
                     </div>
                     <button
-                        onClick={() => setShowCreateModal(true)}
+                        onClick={() => {
+                            setFormData({
+                                title: "", description: "", location: "", salary: "", company: "",
+                                type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                            });
+                            setShowCreateModal(true);
+                        }}
                         className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
                     >
                         <Plus className="w-5 h-5 mr-2" />
