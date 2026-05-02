@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -104,6 +105,21 @@ public class Job {
     @Field("max_applications")
     @JsonProperty("max_applications")
     private Integer maxApplications;
+
+    // Company logo URL (from recruiter profile)
+    @Field("company_logo")
+    @JsonProperty("company_logo")
+    private String companyLogo;
+
+    // Company website (from recruiter profile)
+    @Field("company_website")
+    @JsonProperty("company_website")
+    private String companyWebsite;
+
+    // Company details (populated from recruiter when fetching)
+    @Transient
+    @JsonProperty("recruiter")
+    private User recruiter;
 
     // Timestamp when job was posted
     @Field("created_at")

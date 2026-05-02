@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { getMyJobs, createJob, updateJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl } from "@/lib/api";
-import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut, Edit2, Table2 } from "lucide-react";
+import { getMyJobs, createJob, updateJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl, getUser, getLogoViewUrl } from "@/lib/api";
+import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut, Edit2, Table2, Building2, Settings, AlertTriangle } from "lucide-react";
+import ProfileDialog from "@/components/ProfileDialog";
 
 // Job Type Options
 const JOB_TYPES = [
@@ -27,7 +28,7 @@ const EXPERIENCE_LEVELS = [
 ];
 
 // # 'Recruiter Dashboard' Component #
-const RecruiterDashboard = ({ userData }) => {
+const RecruiterDashboard = ({ userData: initialUserData }) => {
     const { user } = useUser();
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -46,6 +47,8 @@ const RecruiterDashboard = ({ userData }) => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [jobToDelete, setJobToDelete] = useState(null);
     const [editingJob, setEditingJob] = useState(null);
+    const [showProfileDialog, setShowProfileDialog] = useState(false);
+    const [userData, setUserData] = useState(initialUserData);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -79,6 +82,26 @@ const RecruiterDashboard = ({ userData }) => {
     useEffect(() => {
         fetchJobs();
     }, []);
+
+    // # Refresh user data after profile update
+    const handleProfileUpdate = async (updatedUser) => {
+        if (updatedUser) {
+            setUserData(updatedUser);
+        } else {
+            try {
+                const response = await getUser(user.id);
+                if (response.success) {
+                    setUserData(response.data);
+                }
+            } catch (error) {
+                console.error("Error refreshing user data:", error);
+            }
+        }
+    };
+
+    // # Profile Completion (calculated by backend)
+    const profileCompletion = userData?.profile_completion ?? 0;
+    const canPostJob = profileCompletion >= 80;
 
     // # Handle Create Job
     const handleCreateJob = async (e) => {
@@ -263,21 +286,77 @@ const RecruiterDashboard = ({ userData }) => {
         <>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
+                {/* # Profile Completion Banner # */}
+                {!canPostJob && (
+                    <div className="mb-6 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center">
+                                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-red-800 dark:text-red-200">Complete Your Company Profile to Post Jobs</h3>
+                                    <p className="text-sm text-red-700 dark:text-red-300">You need at least 80% profile completion to post jobs. Current: <strong>{profileCompletion}%</strong></p>
+                                    <div className="mt-2 w-full max-w-xs bg-red-200 dark:bg-red-900 rounded-full h-2">
+                                        <div className="bg-red-600 h-2 rounded-full transition-all" style={{ width: `${profileCompletion}%` }} />
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowProfileDialog(true)}
+                                className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shrink-0"
+                            >
+                                <Settings className="w-4 h-4 mr-2" />
+                                Complete Profile
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* # Header # */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Recruiter Dashboard</h2>
-                        <p className="text-gray-600 mt-1">Manage your job postings and applications</p>
+                    <div className="flex items-center gap-4">
+                        {/* Company Logo/Icon */}
+                        {userData?.company_logo ? (
+                            <img src={getLogoViewUrl(userData.company_logo)} alt={userData.company_name} className="w-14 h-14 rounded-xl object-cover border-2 border-gray-100 shadow-sm" />
+                        ) : (
+                            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-sm">
+                                <Building2 className="w-7 h-7 text-white" />
+                            </div>
+                        )}
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {userData?.company_name || "Recruiter Dashboard"}
+                                </h2>
+                                <button
+                                    onClick={() => setShowProfileDialog(true)}
+                                    className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                    title="Edit Profile"
+                                >
+                                    <Settings className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-400 mt-0.5">
+                                {userData?.industry ? `${userData.industry} • ` : ""}
+                                {userData?.headquarters || "Manage your job postings"}
+                            </p>
+                        </div>
                     </div>
                     <button
                         onClick={() => {
+                            if (!canPostJob) {
+                                toast.error(`Complete at least 80% of your profile to post jobs. Current: ${profileCompletion}%`);
+                                setShowProfileDialog(true);
+                                return;
+                            }
                             setFormData({
-                                title: "", description: "", location: "", salary: "", company: "",
+                                title: "", description: "", location: "", salary: "", company: userData?.company_name || "",
                                 type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
                             });
                             setShowCreateModal(true);
                         }}
-                        className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                        className={`mt-4 sm:mt-0 inline-flex items-center px-4 py-2 font-medium rounded-lg transition-colors ${canPostJob ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                     >
                         <Plus className="w-5 h-5 mr-2" />
                         Post New Job
@@ -295,8 +374,15 @@ const RecruiterDashboard = ({ userData }) => {
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs posted yet</h3>
                         <p className="text-gray-600 mb-4">Start by posting your first job opening</p>
                         <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                            onClick={() => {
+                                if (!canPostJob) {
+                                    toast.error(`Complete at least 80% of your profile to post jobs. Current: ${profileCompletion}%`);
+                                    setShowProfileDialog(true);
+                                    return;
+                                }
+                                setShowCreateModal(true);
+                            }}
+                            className={`inline-flex items-center px-4 py-2 font-medium rounded-lg transition-colors ${canPostJob ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                         >
                             <Plus className="w-5 h-5 mr-2" />
                             Post New Job
@@ -1082,6 +1168,15 @@ const RecruiterDashboard = ({ userData }) => {
                     </div>
                 </div>
             )}
+
+            {/* # Profile Dialog # */}
+            <ProfileDialog
+                isOpen={showProfileDialog}
+                onClose={() => setShowProfileDialog(false)}
+                userData={userData}
+                clerkUserId={user?.id}
+                onProfileUpdate={handleProfileUpdate}
+            />
         </>
     );
 };

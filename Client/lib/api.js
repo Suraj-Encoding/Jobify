@@ -52,6 +52,17 @@ export const setUserRole = async (clerkUserId, role) => {
     });
 };
 
+// # Update User Profile #
+export const updateProfile = async (clerkUserId, profileData) => {
+    return await apiRequest("/user/profile", {
+        method: "PUT",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+        body: JSON.stringify(profileData),
+    });
+};
+
 // ## Job API ##
 
 // # Get All Jobs #
@@ -211,6 +222,37 @@ export const getResumeViewUrl = (resumeId) => {
 // # Delete Resume #
 export const deleteResume = async (clerkUserId) => {
     return await apiRequest("/file/resume", {
+        method: "DELETE",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+    });
+};
+
+// # Upload Company Logo #
+export const uploadLogo = async (clerkUserId, file) => {
+    const url = `${API_BASE_URL}${API_VERSION}/file/logo`;
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+        body: formData,
+    });
+    return response.json();
+};
+
+// # Get Logo View URL #
+export const getLogoViewUrl = (logoId) => {
+    return `${API_BASE_URL}${API_VERSION}/file/logo/${logoId}/view`;
+};
+
+// # Delete Company Logo #
+export const deleteLogo = async (clerkUserId) => {
+    return await apiRequest("/file/logo", {
         method: "DELETE",
         headers: {
             "clerk-user-id": clerkUserId,

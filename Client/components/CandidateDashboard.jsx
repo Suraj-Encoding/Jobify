@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { getAllJobs, applyToJob, getMyApplications, uploadResume, getResumeViewUrl, withdrawApplication } from "@/lib/api";
-import { Briefcase, MapPin, DollarSign, Building, X, Send, FileText, Clock, CheckCircle, XCircle, Upload, ExternalLink, Calendar, Award, Loader2, Users, Download, ZoomIn, ZoomOut, Trash2 } from "lucide-react";
+import { getAllJobs, applyToJob, getMyApplications, uploadResume, getResumeViewUrl, withdrawApplication, getUser, getLogoViewUrl } from "@/lib/api";
+import { Briefcase, MapPin, DollarSign, Building, X, Send, FileText, Clock, CheckCircle, XCircle, Upload, ExternalLink, Calendar, Award, Loader2, Users, Download, ZoomIn, ZoomOut, Trash2, User, Settings, AlertTriangle, Globe } from "lucide-react";
+import ProfileDialog from "@/components/ProfileDialog";
 
 // Job Type Labels
 const JOB_TYPE_LABELS = {
@@ -17,7 +18,7 @@ const JOB_TYPE_LABELS = {
 };
 
 // # 'Candidate Dashboard' Component #
-const CandidateDashboard = ({ userData }) => {
+const CandidateDashboard = ({ userData: initialUserData }) => {
     const { user } = useUser();
     const [activeTab, setActiveTab] = useState("jobs");
     const [jobs, setJobs] = useState([]);
@@ -37,6 +38,8 @@ const CandidateDashboard = ({ userData }) => {
     const [withdrawing, setWithdrawing] = useState(null);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
+    const [showProfileDialog, setShowProfileDialog] = useState(false);
+    const [userData, setUserData] = useState(initialUserData);
 
     // # Fetch Jobs
     const fetchJobs = async () => {
@@ -71,6 +74,26 @@ const CandidateDashboard = ({ userData }) => {
         };
         fetchData();
     }, []);
+
+    // # Refresh user data after profile update
+    const handleProfileUpdate = async (updatedUser) => {
+        if (updatedUser) {
+            setUserData(updatedUser);
+        } else {
+            try {
+                const response = await getUser(user.id);
+                if (response.success) {
+                    setUserData(response.data);
+                }
+            } catch (error) {
+                console.error("Error refreshing user data:", error);
+            }
+        }
+    };
+
+    // # Profile Completion (calculated by backend)
+    const profileCompletion = userData?.profile_completion ?? 0;
+    const canApply = profileCompletion >= 80;
 
     // # Handle Resume Upload
     const handleResumeUpload = async (e) => {
@@ -230,10 +253,70 @@ const CandidateDashboard = ({ userData }) => {
         <>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
+                {/* # Profile Completion Banner # */}
+                {!canApply && (
+                    <div className="mb-6 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center">
+                                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-red-800 dark:text-red-200">Complete Your Profile to Apply for Jobs</h3>
+                                    <p className="text-sm text-red-700 dark:text-red-300">You need at least 80% profile completion to apply. Current: <strong>{profileCompletion}%</strong></p>
+                                    <div className="mt-2 w-full max-w-xs bg-red-200 dark:bg-red-900 rounded-full h-2">
+                                        <div className="bg-red-600 h-2 rounded-full transition-all" style={{ width: `${profileCompletion}%` }} />
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowProfileDialog(true)}
+                                className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shrink-0"
+                            >
+                                <Settings className="w-4 h-4 mr-2" />
+                                Complete Profile
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* # Header # */}
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900">Candidate Dashboard</h2>
-                    <p className="text-gray-600 mt-1">Browse jobs and track your applications</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        {/* Profile Avatar */}
+                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-sm">
+                            <User className="w-7 h-7 text-white" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {userData?.current_title || "Candidate Dashboard"}
+                                </h2>
+                                <button
+                                    onClick={() => setShowProfileDialog(true)}
+                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    title="Edit Profile"
+                                >
+                                    <Settings className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-400 mt-0.5">
+                                {userData?.location ? `${userData.location} • ` : ""}
+                                {userData?.experience_level || "Browse jobs and track your applications"}
+                            </p>
+                        </div>
+                    </div>
+                    {userData?.linkedin_url && (
+                        <a
+                            href={userData.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <Globe className="w-4 h-4 mr-2" />
+                            View LinkedIn
+                        </a>
+                    )}
                 </div>
 
                 {/* # Tabs # */}
@@ -275,20 +358,29 @@ const CandidateDashboard = ({ userData }) => {
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {jobs.map((job) => (
                                 <div key={job._id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{job.title}</h3>
-                                        {job.type && (
-                                            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full whitespace-nowrap">
-                                                {JOB_TYPE_LABELS[job.type] || job.type}
-                                            </span>
+                                    <div className="flex items-start gap-3 mb-4">
+                                        {/* Company Logo */}
+                                        {job.company_logo ? (
+                                            <img src={getLogoViewUrl(job.company_logo)} alt={job.company} className="w-12 h-12 rounded-lg object-cover border border-gray-200" />
+                                        ) : (
+                                            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                                                <Building className="w-6 h-6 text-blue-600" />
+                                            </div>
                                         )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{job.title}</h3>
+                                                {job.type && (
+                                                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full whitespace-nowrap shrink-0">
+                                                        {JOB_TYPE_LABELS[job.type] || job.type}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-gray-600 font-medium">{job.company}</p>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2 mb-4">
-                                        <div className="flex items-center text-sm text-gray-600">
-                                            <Building className="w-4 h-4 mr-2 text-gray-400" />
-                                            {job.company}
-                                        </div>
                                         <div className="flex items-center text-sm text-gray-600">
                                             <MapPin className="w-4 h-4 mr-2 text-gray-400" />
                                             {job.location}
@@ -347,16 +439,25 @@ const CandidateDashboard = ({ userData }) => {
                                             View Details
                                         </button>
                                         <button
-                                            onClick={() => openApplyModal(job)}
-                                            disabled={appliedJobIds.includes(job._id) || isJobFull(job)}
+                                            onClick={() => {
+                                                if (!canApply) {
+                                                    toast.error(`Complete at least 80% of your profile to apply. Current: ${profileCompletion}%`);
+                                                    setShowProfileDialog(true);
+                                                    return;
+                                                }
+                                                openApplyModal(job);
+                                            }}
+                                            disabled={appliedJobIds.includes(job._id) || isJobFull(job) || !canApply}
                                             className={`flex-1 py-2 rounded-lg font-medium transition-colors ${appliedJobIds.includes(job._id)
                                                 ? "bg-gray-100 text-gray-500 cursor-not-allowed"
                                                 : isJobFull(job)
                                                     ? "bg-red-100 text-red-500 cursor-not-allowed"
-                                                    : "bg-blue-600 text-white hover:bg-blue-700"
+                                                    : !canApply
+                                                        ? "bg-orange-100 text-orange-600 cursor-not-allowed"
+                                                        : "bg-blue-600 text-white hover:bg-blue-700"
                                                 }`}
                                         >
-                                            {appliedJobIds.includes(job._id) ? "Applied" : isJobFull(job) ? "Full" : "Apply"}
+                                            {appliedJobIds.includes(job._id) ? "Applied" : isJobFull(job) ? "Full" : !canApply ? `${profileCompletion}%` : "Apply"}
                                         </button>
                                     </div>
                                 </div>
@@ -601,18 +702,30 @@ const CandidateDashboard = ({ userData }) => {
                         </div>
 
                         <div className="space-y-6">
-                            {/* Job Header */}
+                            {/* Job Header with Company Logo */}
                             <div className="border-b border-gray-200 pb-6">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <h4 className="text-2xl font-bold text-gray-900">{selectedJob.title}</h4>
-                                        <p className="text-lg text-gray-600 mt-1">{selectedJob.company}</p>
-                                    </div>
-                                    {selectedJob.type && (
-                                        <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full">
-                                            {JOB_TYPE_LABELS[selectedJob.type] || selectedJob.type}
-                                        </span>
+                                <div className="flex items-start gap-4">
+                                    {/* Company Logo */}
+                                    {selectedJob.company_logo ? (
+                                        <img src={selectedJob.company_logo} alt={selectedJob.company} className="w-16 h-16 rounded-xl object-cover border border-gray-200" />
+                                    ) : (
+                                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                                            <Building className="w-8 h-8 text-blue-600" />
+                                        </div>
                                     )}
+                                    <div className="flex-1">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <h4 className="text-2xl font-bold text-gray-900">{selectedJob.title}</h4>
+                                                <p className="text-lg text-gray-600 mt-1">{selectedJob.company}</p>
+                                            </div>
+                                            {selectedJob.type && (
+                                                <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full">
+                                                    {JOB_TYPE_LABELS[selectedJob.type] || selectedJob.type}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-gray-600">
                                     <span className="flex items-center">
@@ -637,8 +750,54 @@ const CandidateDashboard = ({ userData }) => {
                                             Deadline: {selectedJob.deadline}
                                         </span>
                                     )}
+                                    {selectedJob.company_website && (
+                                        <a
+                                            href={selectedJob.company_website}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center text-blue-600 hover:text-blue-700"
+                                        >
+                                            <Globe className="w-4 h-4 mr-1" />
+                                            Company Website
+                                        </a>
+                                    )}
                                 </div>
                             </div>
+
+                            {/* Company Info (if available from recruiter) */}
+                            {selectedJob.recruiter && (selectedJob.recruiter.company_description || selectedJob.recruiter.industry) && (
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <h5 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                        <Building className="w-5 h-5 text-gray-600" />
+                                        About {selectedJob.company}
+                                    </h5>
+                                    {selectedJob.recruiter.company_description && (
+                                        <p className="text-sm text-gray-600 mb-3">{selectedJob.recruiter.company_description}</p>
+                                    )}
+                                    <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                                        {selectedJob.recruiter.industry && (
+                                            <span className="px-2 py-1 bg-white rounded-lg border border-gray-200">
+                                                {selectedJob.recruiter.industry}
+                                            </span>
+                                        )}
+                                        {selectedJob.recruiter.company_size && (
+                                            <span className="px-2 py-1 bg-white rounded-lg border border-gray-200">
+                                                {selectedJob.recruiter.company_size}
+                                            </span>
+                                        )}
+                                        {selectedJob.recruiter.headquarters && (
+                                            <span className="px-2 py-1 bg-white rounded-lg border border-gray-200">
+                                                📍 {selectedJob.recruiter.headquarters}
+                                            </span>
+                                        )}
+                                        {selectedJob.recruiter.founded_year && (
+                                            <span className="px-2 py-1 bg-white rounded-lg border border-gray-200">
+                                                Founded {selectedJob.recruiter.founded_year}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Description */}
                             <div>
@@ -697,18 +856,25 @@ const CandidateDashboard = ({ userData }) => {
                                 )}
                                 <button
                                     onClick={() => {
+                                        if (!canApply) {
+                                            toast.error(`Complete at least 80% of your profile to apply. Current: ${profileCompletion}%`);
+                                            setShowProfileDialog(true);
+                                            return;
+                                        }
                                         setShowJobDetailModal(false);
                                         openApplyModal(selectedJob);
                                     }}
-                                    disabled={appliedJobIds.includes(selectedJob._id) || isJobFull(selectedJob)}
+                                    disabled={appliedJobIds.includes(selectedJob._id) || isJobFull(selectedJob) || !canApply}
                                     className={`w-full py-3 rounded-lg font-medium transition-colors ${appliedJobIds.includes(selectedJob._id)
                                         ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                                         : isJobFull(selectedJob)
                                             ? 'bg-red-100 text-red-500 cursor-not-allowed'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            : !canApply
+                                                ? 'bg-orange-100 text-orange-600 cursor-not-allowed'
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
                                         }`}
                                 >
-                                    {appliedJobIds.includes(selectedJob._id) ? 'Already Applied' : isJobFull(selectedJob) ? 'Applications Full' : 'Apply Now'}
+                                    {appliedJobIds.includes(selectedJob._id) ? 'Already Applied' : isJobFull(selectedJob) ? 'Applications Full' : !canApply ? `Complete Profile (${profileCompletion}%)` : 'Apply Now'}
                                 </button>
                             </div>
                         </div>
@@ -829,6 +995,15 @@ const CandidateDashboard = ({ userData }) => {
                     </div>
                 </div>
             )}
+
+            {/* # Profile Dialog # */}
+            <ProfileDialog
+                isOpen={showProfileDialog}
+                onClose={() => setShowProfileDialog(false)}
+                userData={userData}
+                clerkUserId={user?.id}
+                onProfileUpdate={handleProfileUpdate}
+            />
         </>
     );
 };

@@ -1,6 +1,7 @@
 package com.jobify.controller;
 
 import com.jobify.dto.ApiResponse;
+import com.jobify.model.CompanyLogo;
 import com.jobify.model.Resume;
 import com.jobify.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -101,5 +102,66 @@ public class FileController {
         
         fileService.deleteResume(clerkUserId);
         return ResponseEntity.ok(ApiResponse.success("Resume deleted successfully"));
+    }
+
+    // ==================== COMPANY LOGO ENDPOINTS ====================
+
+    /**
+     * Upload Company Logo (creates or overwrites existing)
+     * POST /api/v1/file/logo
+     * Header: clerk-user-id
+     * Body: multipart/form-data with "file" field
+     */
+    @PostMapping(value = "/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CompanyLogo>> uploadLogo(
+            @RequestHeader("clerk-user-id") String clerkUserId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        
+        CompanyLogo logo = fileService.uploadLogo(clerkUserId, file);
+        return ResponseEntity.ok(ApiResponse.success("Logo uploaded successfully", logo));
+    }
+
+    /**
+     * Get Logo metadata
+     * GET /api/v1/file/logo/{logoId}
+     */
+    @GetMapping("/logo/{logoId}")
+    public ResponseEntity<ApiResponse<CompanyLogo>> getLogo(@PathVariable String logoId) {
+        CompanyLogo logo = fileService.getLogo(logoId);
+        // Don't send file data in metadata response
+        logo.setFileData(null);
+        return ResponseEntity.ok(ApiResponse.success("Logo fetched successfully", logo));
+    }
+
+    /**
+     * View Logo image
+     * GET /api/v1/file/logo/{logoId}/view
+     */
+    @GetMapping("/logo/{logoId}/view")
+    public ResponseEntity<byte[]> viewLogo(@PathVariable String logoId) {
+        CompanyLogo logo = fileService.getLogo(logoId);
+        byte[] data = fileService.getLogoData(logoId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(logo.getContentType()));
+        headers.setCacheControl("public, max-age=86400"); // Cache for 24 hours
+        headers.setContentLength(data.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(data);
+    }
+
+    /**
+     * Delete Company Logo
+     * DELETE /api/v1/file/logo
+     * Header: clerk-user-id
+     */
+    @DeleteMapping("/logo")
+    public ResponseEntity<ApiResponse<Void>> deleteLogo(
+            @RequestHeader("clerk-user-id") String clerkUserId) {
+        
+        fileService.deleteLogo(clerkUserId);
+        return ResponseEntity.ok(ApiResponse.success("Logo deleted successfully"));
     }
 }

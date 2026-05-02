@@ -111,4 +111,53 @@ public class UserService {
 
         return "User deleted successfully!";
     }
+
+    /**
+     * Update user profile
+     */
+    public User updateProfile(String clerkUserId, User profileData) {
+        log.info("Updating profile for user: {}", clerkUserId);
+
+        User user = userRepository.findByClerkUserId(clerkUserId)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Update common fields
+        if (profileData.getPhone() != null) user.setPhone(profileData.getPhone().trim());
+        if (profileData.getLocation() != null) user.setLocation(profileData.getLocation().trim());
+        if (profileData.getLinkedinUrl() != null) user.setLinkedinUrl(profileData.getLinkedinUrl().trim());
+
+        // Update candidate-specific fields
+        if ("CANDIDATE".equals(user.getRole())) {
+            if (profileData.getBio() != null) user.setBio(profileData.getBio().trim());
+            if (profileData.getSkills() != null) user.setSkills(profileData.getSkills().trim());
+            if (profileData.getExperienceLevel() != null) user.setExperienceLevel(profileData.getExperienceLevel().trim());
+            if (profileData.getCurrentTitle() != null) user.setCurrentTitle(profileData.getCurrentTitle().trim());
+            if (profileData.getEducationDegree() != null) user.setEducationDegree(profileData.getEducationDegree().trim());
+            if (profileData.getEducationCollege() != null) user.setEducationCollege(profileData.getEducationCollege().trim());
+            if (profileData.getPortfolioUrl() != null) user.setPortfolioUrl(profileData.getPortfolioUrl().trim());
+            if (profileData.getExpectedSalary() != null) user.setExpectedSalary(profileData.getExpectedSalary().trim());
+            if (profileData.getResumeId() != null) user.setResumeId(profileData.getResumeId().trim());
+        }
+
+        // Update recruiter/company-specific fields
+        if ("RECRUITER".equals(user.getRole())) {
+            if (profileData.getCompanyName() != null) user.setCompanyName(profileData.getCompanyName().trim());
+            if (profileData.getCompanyLogo() != null) user.setCompanyLogo(profileData.getCompanyLogo().trim());
+            if (profileData.getCompanyWebsite() != null) user.setCompanyWebsite(profileData.getCompanyWebsite().trim());
+            if (profileData.getCompanyEmail() != null) user.setCompanyEmail(profileData.getCompanyEmail().trim());
+            if (profileData.getCompanyPhone() != null) user.setCompanyPhone(profileData.getCompanyPhone().trim());
+            if (profileData.getIndustry() != null) user.setIndustry(profileData.getIndustry().trim());
+            if (profileData.getCompanySize() != null) user.setCompanySize(profileData.getCompanySize().trim());
+            if (profileData.getHeadquarters() != null) user.setHeadquarters(profileData.getHeadquarters().trim());
+            if (profileData.getCompanyDescription() != null) user.setCompanyDescription(profileData.getCompanyDescription().trim());
+            if (profileData.getFoundedYear() != null) user.setFoundedYear(profileData.getFoundedYear());
+            if (profileData.getCompanyLinkedin() != null) user.setCompanyLinkedin(profileData.getCompanyLinkedin().trim());
+        }
+
+        user.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
+        userRepository.save(user);
+
+        log.info("Profile updated successfully");
+        return user;
+    }
 }

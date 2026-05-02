@@ -40,6 +40,12 @@ public class JobService {
             throw new AppException("Only recruiters can create jobs", HttpStatus.FORBIDDEN);
         }
 
+        // Check profile completion (minimum 80% required)
+        Integer profileCompletion = recruiter.getProfileCompletion();
+        if (profileCompletion == null || profileCompletion < 80) {
+            throw new AppException("Please complete at least 80% of your company profile before posting jobs. Current: " + (profileCompletion != null ? profileCompletion : 0) + "%", HttpStatus.BAD_REQUEST);
+        }
+
         // Validate required fields
         if (jobData.getTitle() == null || jobData.getTitle().trim().isEmpty()) {
             throw new AppException("Job title is required", HttpStatus.BAD_REQUEST);
@@ -50,8 +56,14 @@ public class JobService {
         if (jobData.getLocation() == null || jobData.getLocation().trim().isEmpty()) {
             throw new AppException("Job location is required", HttpStatus.BAD_REQUEST);
         }
-        if (jobData.getCompany() == null || jobData.getCompany().trim().isEmpty()) {
-            throw new AppException("Company name is required", HttpStatus.BAD_REQUEST);
+        
+        // Get company name - prefer from profile, fallback to job data
+        String companyName = recruiter.getCompanyName();
+        if (companyName == null || companyName.isEmpty()) {
+            companyName = jobData.getCompany();
+        }
+        if (companyName == null || companyName.trim().isEmpty()) {
+            throw new AppException("Company name is required. Please complete your profile.", HttpStatus.BAD_REQUEST);
         }
 
         LocalDateTime now = TimeUtils.getCurrentTimeInIST();
@@ -64,7 +76,9 @@ public class JobService {
                 .description(jobData.getDescription().trim())
                 .location(jobData.getLocation().trim())
                 .salary(jobData.getSalary() != null ? jobData.getSalary().trim() : null)
-                .company(jobData.getCompany().trim())
+                .company(companyName.trim())
+                .companyLogo(recruiter.getCompanyLogo())
+                .companyWebsite(recruiter.getCompanyWebsite())
                 .type(jobData.getType() != null ? jobData.getType().trim() : "FULL_TIME")
                 .experience(jobData.getExperience() != null ? jobData.getExperience().trim() : null)
                 .skills(jobData.getSkills() != null ? jobData.getSkills().trim() : null)
@@ -85,10 +99,35 @@ public class JobService {
 
     /**
      * Get all jobs (for candidates to browse)
+     * Includes recruiter/company info for each job
      */
     public List<Job> getAllJobs() {
         log.info("Fetching all jobs");
-        return jobRepository.findAllByOrderByCreatedAtDesc();
+        List<Job> jobs = jobRepository.findAllByOrderByCreatedAtDesc();
+        
+        // Populate recruiter info for each job
+        for (Job job : jobs) {
+            if (job.getRecruiterId() != null) {
+                User recruiter = userService.getUserById(job.getRecruiterId());
+                if (recruiter != null) {
+                    // Create a minimal recruiter object for response
+                    User recruiterInfo = new User();
+                    recruiterInfo.setCompanyName(recruiter.getCompanyName());
+                    recruiterInfo.setCompanyLogo(recruiter.getCompanyLogo());
+                    recruiterInfo.setCompanyWebsite(recruiter.getCompanyWebsite());
+                    recruiterInfo.setCompanyEmail(recruiter.getCompanyEmail());
+                    recruiterInfo.setCompanyDescription(recruiter.getCompanyDescription());
+                    recruiterInfo.setIndustry(recruiter.getIndustry());
+                    recruiterInfo.setCompanySize(recruiter.getCompanySize());
+                    recruiterInfo.setHeadquarters(recruiter.getHeadquarters());
+                    recruiterInfo.setFoundedYear(recruiter.getFoundedYear());
+                    recruiterInfo.setCompanyLinkedin(recruiter.getCompanyLinkedin());
+                    job.setRecruiter(recruiterInfo);
+                }
+            }
+        }
+        
+        return jobs;
     }
 
     /**

@@ -42,6 +42,12 @@ public class ApplicationService {
             throw new AppException("Only candidates can apply to jobs", HttpStatus.FORBIDDEN);
         }
 
+        // Check profile completion (minimum 80% required)
+        Integer profileCompletion = candidate.getProfileCompletion();
+        if (profileCompletion == null || profileCompletion < 80) {
+            throw new AppException("Please complete at least 80% of your profile before applying. Current: " + (profileCompletion != null ? profileCompletion : 0) + "%", HttpStatus.BAD_REQUEST);
+        }
+
         // Validate job ID
         if (applicationData.getJobId() == null || applicationData.getJobId().trim().isEmpty()) {
             throw new AppException("Job ID is required", HttpStatus.BAD_REQUEST);

@@ -78,4 +78,18 @@ public class UserController {
         User user = userService.getUser(clerkUserId);
         return ResponseEntity.ok(ApiResponse.success("User fetched successfully", user));
     }
+
+    /**
+     * Update Profile - Update user profile details
+     * PUT /api/v1/user/profile
+     * Header: clerk-user-id
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<User>> updateProfile(
+            @RequestHeader("clerk-user-id") String clerkUserId,
+            @RequestBody User profileData) {
+        
+        User updatedUser = userService.updateProfile(clerkUserId, profileData);
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updatedUser));
+    }
 }
