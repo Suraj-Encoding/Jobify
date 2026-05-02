@@ -628,7 +628,7 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
             {/* # Applications Modal # */}
             {showApplicationsModal && selectedJob && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h3 className="text-xl font-semibold text-gray-900">Applications</h3>
@@ -636,22 +636,13 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                             </div>
                             <div className="flex items-center space-x-2">
                                 {applications.length > 0 && (
-                                    <>
-                                        <button
-                                            onClick={() => setShowExcelPreview(true)}
-                                            className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                        >
-                                            <Table2 className="w-4 h-4 mr-1" />
-                                            Preview
-                                        </button>
-                                        <button
-                                            onClick={handleExportExcel}
-                                            className="inline-flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                        >
-                                            <Download className="w-4 h-4 mr-1" />
-                                            Download Excel
-                                        </button>
-                                    </>
+                                    <button
+                                        onClick={() => setShowExcelPreview(true)}
+                                        className="inline-flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        <Table2 className="w-4 h-4 mr-2" />
+                                        View Candidates Sheet
+                                    </button>
                                 )}
                                 <button onClick={() => setShowApplicationsModal(false)} className="text-gray-400 hover:text-gray-600">
                                     <X className="w-6 h-6" />
@@ -669,15 +660,45 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                 {applications.map((app) => (
                                     <div key={app._id} className="border border-gray-200 rounded-lg p-4">
                                         <div className="flex items-start justify-between mb-3">
-                                            <div>
-                                                <h4 className="font-medium text-gray-900">
-                                                    {app.candidate_name || (app.candidate?.firstName + " " + app.candidate?.lastName)}
-                                                </h4>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-semibold text-gray-900">
+                                                        {app.candidate_name || (app.candidate?.firstName + " " + app.candidate?.lastName)}
+                                                    </h4>
+                                                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(app.status)}`}>
+                                                        {app.status === "UNDER_REVIEW" ? "Under Review" : app.status}
+                                                    </span>
+                                                </div>
                                                 <p className="text-sm text-gray-600">{app.candidate_email || app.candidate?.email}</p>
                                             </div>
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(app.status)}`}>
-                                                {app.status === "UNDER_REVIEW" ? "Under Review" : app.status}
-                                            </span>
+                                        </div>
+
+                                        {/* Candidate Details Grid */}
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 p-3 bg-gray-50 rounded-lg text-sm">
+                                            <div>
+                                                <span className="text-gray-500 text-xs">Phone</span>
+                                                <p className="font-medium text-gray-800">{app.candidate?.phone || "-"}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500 text-xs">Location</span>
+                                                <p className="font-medium text-gray-800">{app.candidate?.location || "-"}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500 text-xs">Current Title</span>
+                                                <p className="font-medium text-gray-800">{app.candidate?.current_title || "-"}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500 text-xs">Experience</span>
+                                                <p className="font-medium text-gray-800">{app.candidate?.experience_level || "-"}</p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <span className="text-gray-500 text-xs">Skills</span>
+                                                <p className="font-medium text-gray-800 truncate">{app.candidate?.skills || "-"}</p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <span className="text-gray-500 text-xs">Education</span>
+                                                <p className="font-medium text-gray-800">{app.candidate?.education_degree ? `${app.candidate.education_degree}${app.candidate.education_college ? ` - ${app.candidate.education_college}` : ''}` : "-"}</p>
+                                            </div>
                                         </div>
 
                                         {/* Documents - Resume and Cover Letter */}
@@ -804,13 +825,13 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
 
             {/* # Excel Preview Modal # */}
             {showExcelPreview && selectedJob && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[70] p-4">
-                    <div className="bg-white rounded-xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white rounded-xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
                             <div>
-                                <h3 className="text-lg font-semibold text-white">Excel Preview</h3>
-                                <p className="text-sm text-blue-100">Candidates for: {selectedJob.title}</p>
+                                <h3 className="text-lg font-semibold text-white">Candidates Sheet</h3>
+                                <p className="text-sm text-blue-100">{selectedJob.title} • {applications.length} candidates</p>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <button
@@ -831,33 +852,57 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                         </div>
 
                         {/* Excel Table Content */}
-                        <div className="flex-1 overflow-auto bg-gray-100 p-6">
-                            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                                <table className="w-full border-collapse">
+                        <div className="flex-1 overflow-auto bg-gray-100 p-4">
+                            <div className="bg-white rounded-lg shadow-lg overflow-x-auto">
+                                <table className="w-full border-collapse min-w-[1400px]">
                                     <thead>
                                         <tr className="bg-gradient-to-r from-blue-700 to-blue-800">
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">#</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Candidate Name</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Email</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Status</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Cover Letter</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Resume</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Applied Date</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Rejection Reason</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">#</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Candidate Name</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Email</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Phone</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Location</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Current Title</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Experience</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Skills</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Education</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Status</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Cover Letter</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Resume</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600 whitespace-nowrap">Applied Date</th>
+                                            <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider whitespace-nowrap">Rejection Reason</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {applications.map((app, index) => (
-                                            <tr key={app._id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                <td className="px-4 py-3 text-sm text-gray-900 border border-gray-200 font-medium">{index + 1}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-900 border border-gray-200 font-medium">
-                                                    {app.candidate_name || (app.candidate?.firstName + " " + app.candidate?.lastName) || "N/A"}
+                                            <tr key={app._id} className={index % 2 === 0 ? 'bg-white hover:bg-blue-50' : 'bg-gray-50 hover:bg-blue-50'}>
+                                                <td className="px-3 py-3 text-sm text-gray-900 border border-gray-200 font-medium">{index + 1}</td>
+                                                <td className="px-3 py-3 text-sm text-gray-900 border border-gray-200 font-medium whitespace-nowrap">
+                                                    {app.candidate_name || (app.candidate?.firstName + " " + app.candidate?.lastName) || "-"}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200">
-                                                    {app.candidate_email || app.candidate?.email || "N/A"}
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200">
+                                                    {app.candidate_email || app.candidate?.email || "-"}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm border border-gray-200">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${app.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                    {app.candidate?.phone || "-"}
+                                                </td>
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                    {app.candidate?.location || "-"}
+                                                </td>
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                    {app.candidate?.current_title || "-"}
+                                                </td>
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                    {app.candidate?.experience_level || "-"}
+                                                </td>
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200 max-w-[150px]">
+                                                    <span className="truncate block" title={app.candidate?.skills}>{app.candidate?.skills || "-"}</span>
+                                                </td>
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                    {app.candidate?.education_degree ? `${app.candidate.education_degree}${app.candidate.education_college ? ` - ${app.candidate.education_college}` : ''}` : "-"}
+                                                </td>
+                                                <td className="px-3 py-3 text-sm border border-gray-200">
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap ${app.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
                                                         app.status === "UNDER_REVIEW" ? "bg-blue-100 text-blue-800" :
                                                             app.status === "ACCEPTED" ? "bg-green-100 text-green-800" :
                                                                 app.status === "REJECTED" ? "bg-red-100 text-red-800" :
@@ -870,38 +915,38 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                                         {app.status === "UNDER_REVIEW" ? "Under Review" : app.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-sm border border-gray-200">
+                                                <td className="px-3 py-3 text-sm border border-gray-200 text-center">
                                                     {app.cover_letter_url ? (
                                                         <button
                                                             onClick={() => openPDFViewer(getCoverLetterViewUrl(app.cover_letter_url), "Cover Letter")}
-                                                            className="text-purple-600 hover:text-purple-800 underline font-medium"
+                                                            className="text-purple-600 hover:text-purple-800 underline font-medium text-xs"
                                                         >
-                                                            View Cover Letter
+                                                            View
                                                         </button>
                                                     ) : (
-                                                        <span className="text-gray-400">No cover letter</span>
+                                                        <span className="text-gray-400">-</span>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm border border-gray-200">
+                                                <td className="px-3 py-3 text-sm border border-gray-200 text-center">
                                                     {app.resume_url ? (
                                                         <button
                                                             onClick={() => openPDFViewer(getResumeViewUrl(app.resume_url), "Resume")}
-                                                            className="text-blue-600 hover:text-blue-800 underline font-medium"
+                                                            className="text-blue-600 hover:text-blue-800 underline font-medium text-xs"
                                                         >
-                                                            View Resume
+                                                            View
                                                         </button>
                                                     ) : (
-                                                        <span className="text-gray-400">No resume</span>
+                                                        <span className="text-gray-400">-</span>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
                                                     {app.created_at ? new Date(app.created_at).toLocaleDateString('en-US', {
                                                         day: '2-digit',
                                                         month: 'short',
                                                         year: 'numeric'
                                                     }) : "-"}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200">
+                                                <td className="px-3 py-3 text-sm text-gray-600 border border-gray-200">
                                                     {app.rejection_reason || "-"}
                                                 </td>
                                             </tr>

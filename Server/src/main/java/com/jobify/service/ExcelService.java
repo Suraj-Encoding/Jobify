@@ -97,13 +97,14 @@ public class ExcelService {
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("Candidates for: " + jobTitle);
             titleCell.setCellStyle(titleStyle);
-            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 7));
+            sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 13));
 
             // ===== CREATE HEADER ROW =====
             Row headerRow = sheet.createRow(1);
             headerRow.setHeightInPoints(25);
             String[] headers = {
-                "#", "Candidate Name", "Email", "Status", "Cover Letter", 
+                "#", "Candidate Name", "Email", "Phone", "Location", "Current Title",
+                "Experience", "Skills", "Education", "Status", "Cover Letter", 
                 "Resume", "Applied Date", "Rejection Reason"
             };
 
@@ -117,9 +118,12 @@ public class ExcelService {
             int rowNum = 2;
             for (Application app : applications) {
                 Row row = sheet.createRow(rowNum);
-                row.setHeightInPoints(30);
+                row.setHeightInPoints(35);
                 boolean isAltRow = (rowNum % 2 == 0);
                 CellStyle currentStyle = isAltRow ? altDataStyle : dataStyle;
+
+                // Get candidate details
+                var candidate = app.getCandidate();
 
                 // S.No
                 Cell cell0 = row.createCell(0);
@@ -129,73 +133,120 @@ public class ExcelService {
                 // Candidate Name
                 Cell cell1 = row.createCell(1);
                 String candidateName = app.getCandidateName() != null ? app.getCandidateName() : 
-                    (app.getCandidate() != null ? 
-                        (app.getCandidate().getFirstName() + " " + app.getCandidate().getLastName()) : "N/A");
+                    (candidate != null ? (candidate.getFirstName() + " " + candidate.getLastName()) : "-");
                 cell1.setCellValue(candidateName);
                 cell1.setCellStyle(currentStyle);
 
                 // Email
                 Cell cell2 = row.createCell(2);
                 String email = app.getCandidateEmail() != null ? app.getCandidateEmail() : 
-                    (app.getCandidate() != null ? app.getCandidate().getEmail() : "N/A");
-                cell2.setCellValue(email);
+                    (candidate != null ? candidate.getEmail() : "-");
+                cell2.setCellValue(email != null ? email : "-");
                 cell2.setCellStyle(currentStyle);
 
-                // Status with color
+                // Phone
                 Cell cell3 = row.createCell(3);
-                cell3.setCellValue(formatStatus(app.getStatus()));
-                cell3.setCellStyle(getStatusStyle(app.getStatus(), pendingStyle, reviewedStyle, acceptedStyle, rejectedStyle, currentStyle));
+                cell3.setCellValue(candidate != null && candidate.getPhone() != null ? candidate.getPhone() : "-");
+                cell3.setCellStyle(currentStyle);
+
+                // Location
+                Cell cell4 = row.createCell(4);
+                cell4.setCellValue(candidate != null && candidate.getLocation() != null ? candidate.getLocation() : "-");
+                cell4.setCellStyle(currentStyle);
+
+                // Current Title
+                Cell cell5 = row.createCell(5);
+                cell5.setCellValue(candidate != null && candidate.getCurrentTitle() != null ? candidate.getCurrentTitle() : "-");
+                cell5.setCellStyle(currentStyle);
+
+                // Experience Level
+                Cell cell6 = row.createCell(6);
+                cell6.setCellValue(candidate != null && candidate.getExperienceLevel() != null ? candidate.getExperienceLevel() : "-");
+                cell6.setCellStyle(currentStyle);
+
+                // Skills
+                Cell cell7 = row.createCell(7);
+                cell7.setCellValue(candidate != null && candidate.getSkills() != null ? candidate.getSkills() : "-");
+                cell7.setCellStyle(currentStyle);
+
+                // Education
+                Cell cell8 = row.createCell(8);
+                String education = "-";
+                if (candidate != null) {
+                    String degree = candidate.getEducationDegree();
+                    String college = candidate.getEducationCollege();
+                    if (degree != null && college != null) {
+                        education = degree + " - " + college;
+                    } else if (degree != null) {
+                        education = degree;
+                    } else if (college != null) {
+                        education = college;
+                    }
+                }
+                cell8.setCellValue(education);
+                cell8.setCellStyle(currentStyle);
+
+                // Status with color
+                Cell cell9 = row.createCell(9);
+                cell9.setCellValue(formatStatus(app.getStatus()));
+                cell9.setCellStyle(getStatusStyle(app.getStatus(), pendingStyle, reviewedStyle, acceptedStyle, rejectedStyle, currentStyle));
 
                 // Cover Letter (as hyperlink)
-                Cell cell4 = row.createCell(4);
+                Cell cell10 = row.createCell(10);
                 if (app.getCoverLetterUrl() != null && !app.getCoverLetterUrl().isEmpty()) {
                     String coverLetterLink = serverBaseUrl + "/api/v1/file/cover-letter/" + app.getCoverLetterUrl() + "/view";
-                    cell4.setCellValue("View Cover Letter");
+                    cell10.setCellValue("View");
                     Hyperlink clHyperlink = workbook.getCreationHelper().createHyperlink(HyperlinkType.URL);
                     clHyperlink.setAddress(coverLetterLink);
-                    cell4.setHyperlink(clHyperlink);
-                    cell4.setCellStyle(linkStyle);
+                    cell10.setHyperlink(clHyperlink);
+                    cell10.setCellStyle(linkStyle);
                 } else {
-                    cell4.setCellValue("No cover letter");
-                    cell4.setCellStyle(currentStyle);
+                    cell10.setCellValue("-");
+                    cell10.setCellStyle(currentStyle);
                 }
 
                 // Resume Link (as hyperlink)
-                Cell cell5 = row.createCell(5);
+                Cell cell11 = row.createCell(11);
                 if (app.getResumeUrl() != null && !app.getResumeUrl().isEmpty()) {
                     String resumeLink = serverBaseUrl + "/api/v1/file/resume/" + app.getResumeUrl() + "/view";
-                    cell5.setCellValue("View Resume");
+                    cell11.setCellValue("View");
                     Hyperlink hyperlink = workbook.getCreationHelper().createHyperlink(HyperlinkType.URL);
                     hyperlink.setAddress(resumeLink);
-                    cell5.setHyperlink(hyperlink);
-                    cell5.setCellStyle(linkStyle);
+                    cell11.setHyperlink(hyperlink);
+                    cell11.setCellStyle(linkStyle);
                 } else {
-                    cell5.setCellValue("No resume");
-                    cell5.setCellStyle(currentStyle);
+                    cell11.setCellValue("-");
+                    cell11.setCellStyle(currentStyle);
                 }
 
                 // Applied At
-                Cell cell6 = row.createCell(6);
-                cell6.setCellValue(app.getCreatedAt() != null ? app.getCreatedAt().format(DATE_FORMATTER) : "-");
-                cell6.setCellStyle(currentStyle);
+                Cell cell12 = row.createCell(12);
+                cell12.setCellValue(app.getCreatedAt() != null ? app.getCreatedAt().format(DATE_FORMATTER) : "-");
+                cell12.setCellStyle(currentStyle);
 
                 // Rejection Reason
-                Cell cell7 = row.createCell(7);
-                cell7.setCellValue(app.getRejectionReason() != null ? app.getRejectionReason() : "-");
-                cell7.setCellStyle(currentStyle);
+                Cell cell13 = row.createCell(13);
+                cell13.setCellValue(app.getRejectionReason() != null ? app.getRejectionReason() : "-");
+                cell13.setCellStyle(currentStyle);
 
                 rowNum++;
             }
 
             // ===== SET COLUMN WIDTHS =====
-            sheet.setColumnWidth(0, 2000);   // #
-            sheet.setColumnWidth(1, 6000);   // Name
-            sheet.setColumnWidth(2, 8000);   // Email
-            sheet.setColumnWidth(3, 4000);   // Status
-            sheet.setColumnWidth(4, 10000);  // Cover Letter
-            sheet.setColumnWidth(5, 4000);   // Resume
-            sheet.setColumnWidth(6, 6000);   // Applied Date
-            sheet.setColumnWidth(7, 8000);   // Rejection Reason
+            sheet.setColumnWidth(0, 1500);   // #
+            sheet.setColumnWidth(1, 5000);   // Name
+            sheet.setColumnWidth(2, 7000);   // Email
+            sheet.setColumnWidth(3, 4000);   // Phone
+            sheet.setColumnWidth(4, 4500);   // Location
+            sheet.setColumnWidth(5, 5000);   // Current Title
+            sheet.setColumnWidth(6, 4500);   // Experience
+            sheet.setColumnWidth(7, 8000);   // Skills
+            sheet.setColumnWidth(8, 6000);   // Education
+            sheet.setColumnWidth(9, 3500);   // Status
+            sheet.setColumnWidth(10, 3000);  // Cover Letter
+            sheet.setColumnWidth(11, 3000);  // Resume
+            sheet.setColumnWidth(12, 5000);  // Applied Date
+            sheet.setColumnWidth(13, 6000);  // Rejection Reason
 
             // Freeze header rows
             sheet.createFreezePane(0, 2);

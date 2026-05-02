@@ -66,10 +66,7 @@ public class ApplicationService {
             throw new AppException("You have already applied to this job", HttpStatus.BAD_REQUEST);
         }
 
-        // Validate cover letter (required)
-        if (applicationData.getCoverLetterId() == null || applicationData.getCoverLetterId().trim().isEmpty()) {
-            throw new AppException("Cover letter is required", HttpStatus.BAD_REQUEST);
-        }
+        // Cover letter is optional - no validation needed
 
         // Validate resume (required)
         if (applicationData.getResumeId() == null || applicationData.getResumeId().trim().isEmpty()) {
@@ -84,7 +81,7 @@ public class ApplicationService {
                 .candidateId(candidate.getId())
                 .clerkUserId(clerkUserId)
                 .status("PENDING")
-                .coverLetterUrl(applicationData.getCoverLetterId())
+                .coverLetterUrl(applicationData.getCoverLetterId() != null && !applicationData.getCoverLetterId().trim().isEmpty() ? applicationData.getCoverLetterId() : null)
                 .resumeUrl(applicationData.getResumeId())
                 .candidateName(candidate.getFirstName() + " " + candidate.getLastName())
                 .candidateEmail(candidate.getEmail())
