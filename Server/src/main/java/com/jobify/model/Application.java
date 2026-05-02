@@ -45,7 +45,7 @@ public class Application {
     @JsonProperty("clerk_user_id")
     private String clerkUserId;
 
-    // Application status: "PENDING", "REVIEWED", "ACCEPTED", "REJECTED"
+    // Application status: "PENDING", "UNDER_REVIEW", "ACCEPTED", "REJECTED"
     @Field("status")
     @JsonProperty("status")
     private String status;

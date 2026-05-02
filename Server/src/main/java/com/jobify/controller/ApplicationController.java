@@ -81,7 +81,8 @@ public class ApplicationController {
      * Update Application Status - Update status of an application (Recruiter only)
      * PUT /api/v1/application/{applicationId}/status
      * Header: clerk-user-id
-     * Query: status (PENDING, REVIEWED, ACCEPTED, REJECTED)
+     * Query: status (PENDING, UNDER_REVIEW, ACCEPTED, REJECTED)
+     * Status flow: PENDING → UNDER_REVIEW → ACCEPTED/REJECTED (final states)
      */
     @PutMapping("/{applicationId}/status")
     public ResponseEntity<ApiResponse<Void>> updateApplicationStatus(

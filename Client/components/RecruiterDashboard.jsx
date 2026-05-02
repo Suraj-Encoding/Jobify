@@ -275,7 +275,7 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
     const getStatusColor = (status) => {
         switch (status) {
             case "PENDING": return "bg-yellow-100 text-yellow-700";
-            case "REVIEWED": return "bg-blue-100 text-blue-700";
+            case "UNDER_REVIEW": return "bg-blue-100 text-blue-700";
             case "ACCEPTED": return "bg-green-100 text-green-700";
             case "REJECTED": return "bg-red-100 text-red-700";
             default: return "bg-gray-100 text-gray-700";
@@ -674,7 +674,7 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                                 <p className="text-sm text-gray-600">{app.candidate_email || app.candidate?.email}</p>
                                             </div>
                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(app.status)}`}>
-                                                {app.status}
+                                                {app.status === "UNDER_REVIEW" ? "Under Review" : app.status}
                                             </span>
                                         </div>
 
@@ -706,24 +706,36 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                         )}
 
                                         <div className="flex flex-wrap gap-2">
-                                            <button
-                                                onClick={() => handleUpdateStatus(app._id, "REVIEWED")}
-                                                className="inline-flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-                                            >
-                                                <Clock className="w-4 h-4 mr-1" /> Review
-                                            </button>
-                                            <button
-                                                onClick={() => handleUpdateStatus(app._id, "ACCEPTED")}
-                                                className="inline-flex items-center px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-                                            >
-                                                <CheckCircle className="w-4 h-4 mr-1" /> Accept
-                                            </button>
-                                            <button
-                                                onClick={() => openRejectModal(app)}
-                                                className="inline-flex items-center px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                                            >
-                                                <XCircle className="w-4 h-4 mr-1" /> Reject
-                                            </button>
+                                            {/* PENDING: Can only move to Under Review */}
+                                            {app.status === "PENDING" && (
+                                                <button
+                                                    onClick={() => handleUpdateStatus(app._id, "UNDER_REVIEW")}
+                                                    className="inline-flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                                                >
+                                                    <Clock className="w-4 h-4 mr-1" /> Start Review
+                                                </button>
+                                            )}
+                                            {/* UNDER_REVIEW: Can Accept or Reject */}
+                                            {app.status === "UNDER_REVIEW" && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(app._id, "ACCEPTED")}
+                                                        className="inline-flex items-center px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                                                    >
+                                                        <CheckCircle className="w-4 h-4 mr-1" /> Accept
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openRejectModal(app)}
+                                                        className="inline-flex items-center px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                                                    >
+                                                        <XCircle className="w-4 h-4 mr-1" /> Reject
+                                                    </button>
+                                                </>
+                                            )}
+                                            {/* ACCEPTED/REJECTED: Final states - no actions */}
+                                            {(app.status === "ACCEPTED" || app.status === "REJECTED") && (
+                                                <span className="text-xs text-gray-500 italic">Status is final</span>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -898,16 +910,16 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                                 </td>
                                                 <td className="px-4 py-3 text-sm border border-gray-200">
                                                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${app.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                                                        app.status === "REVIEWED" ? "bg-blue-100 text-blue-800" :
+                                                        app.status === "UNDER_REVIEW" ? "bg-blue-100 text-blue-800" :
                                                             app.status === "ACCEPTED" ? "bg-green-100 text-green-800" :
                                                                 app.status === "REJECTED" ? "bg-red-100 text-red-800" :
                                                                     "bg-gray-100 text-gray-800"
                                                         }`}>
                                                         {app.status === "PENDING" && "⏳ "}
-                                                        {app.status === "REVIEWED" && "👁 "}
+                                                        {app.status === "UNDER_REVIEW" && "👁 "}
                                                         {app.status === "ACCEPTED" && "✓ "}
                                                         {app.status === "REJECTED" && "✗ "}
-                                                        {app.status}
+                                                        {app.status === "UNDER_REVIEW" ? "Under Review" : app.status}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200 max-w-xs">
@@ -954,7 +966,7 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                 <span>Total: {applications.length} candidate(s)</span>
                                 <div className="flex space-x-4">
                                     <span className="flex items-center"><span className="w-3 h-3 bg-yellow-400 rounded-full mr-1"></span> Pending: {applications.filter(a => a.status === "PENDING").length}</span>
-                                    <span className="flex items-center"><span className="w-3 h-3 bg-blue-400 rounded-full mr-1"></span> Reviewed: {applications.filter(a => a.status === "REVIEWED").length}</span>
+                                    <span className="flex items-center"><span className="w-3 h-3 bg-blue-400 rounded-full mr-1"></span> Under Review: {applications.filter(a => a.status === "UNDER_REVIEW").length}</span>
                                     <span className="flex items-center"><span className="w-3 h-3 bg-green-400 rounded-full mr-1"></span> Accepted: {applications.filter(a => a.status === "ACCEPTED").length}</span>
                                     <span className="flex items-center"><span className="w-3 h-3 bg-red-400 rounded-full mr-1"></span> Rejected: {applications.filter(a => a.status === "REJECTED").length}</span>
                                 </div>

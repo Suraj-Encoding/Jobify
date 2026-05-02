@@ -220,7 +220,7 @@ public class ExcelService {
         if (status == null) return defaultStyle;
         switch (status.toUpperCase()) {
             case "PENDING": return pending;
-            case "REVIEWED": return reviewed;
+            case "UNDER_REVIEW": return reviewed;
             case "ACCEPTED": return accepted;
             case "REJECTED": return rejected;
             default: return defaultStyle;
@@ -231,7 +231,7 @@ public class ExcelService {
         if (status == null) return "Unknown";
         switch (status.toUpperCase()) {
             case "PENDING": return "⏳ Pending";
-            case "REVIEWED": return "👁 Reviewed";
+            case "UNDER_REVIEW": return "👁 Under Review";
             case "ACCEPTED": return "✓ Accepted";
             case "REJECTED": return "✗ Rejected";
             default: return status;

@@ -171,7 +171,7 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
     const getStatusColor = (status) => {
         switch (status) {
             case "PENDING": return "bg-yellow-100 text-yellow-700";
-            case "REVIEWED": return "bg-blue-100 text-blue-700";
+            case "UNDER_REVIEW": return "bg-blue-100 text-blue-700";
             case "ACCEPTED": return "bg-green-100 text-green-700";
             case "REJECTED": return "bg-red-100 text-red-700";
             default: return "bg-gray-100 text-gray-700";
@@ -182,7 +182,7 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
     const getStatusIcon = (status) => {
         switch (status) {
             case "PENDING": return <Clock className="w-4 h-4" />;
-            case "REVIEWED": return <FileText className="w-4 h-4" />;
+            case "UNDER_REVIEW": return <FileText className="w-4 h-4" />;
             case "ACCEPTED": return <CheckCircle className="w-4 h-4" />;
             case "REJECTED": return <XCircle className="w-4 h-4" />;
             default: return null;
@@ -500,7 +500,7 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                         </div>
                                         <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusColor(app.status)}`}>
                                             {getStatusIcon(app.status)}
-                                            <span className="ml-1.5">{app.status}</span>
+                                            <span className="ml-1.5">{app.status === "UNDER_REVIEW" ? "Under Review" : app.status}</span>
                                         </div>
                                     </div>
 
@@ -550,8 +550,8 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                         </div>
                                     )}
 
-                                    {/* Withdraw Button (for PENDING and REVIEWED) */}
-                                    {(app.status === "PENDING" || app.status === "REVIEWED") && (
+                                    {/* Withdraw Button (for PENDING and UNDER_REVIEW only) */}
+                                    {(app.status === "PENDING" || app.status === "UNDER_REVIEW") && (
                                         <div className="mt-4 pt-4 border-t border-gray-100">
                                             <button
                                                 onClick={() => openWithdrawModal(app)}

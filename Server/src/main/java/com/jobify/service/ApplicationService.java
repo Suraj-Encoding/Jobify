@@ -142,12 +142,14 @@ public class ApplicationService {
 
     /**
      * Update application status (for recruiter)
+     * Status flow: PENDING → UNDER_REVIEW → ACCEPTED/REJECTED
+     * ACCEPTED and REJECTED are final states
      */
     public String updateApplicationStatus(String clerkUserId, String applicationId, String status) {
         log.info("Updating application {} status to {}", applicationId, status);
 
         // Validate status
-        if (!status.equals("PENDING") && !status.equals("REVIEWED") && 
+        if (!status.equals("PENDING") && !status.equals("UNDER_REVIEW") && 
             !status.equals("ACCEPTED") && !status.equals("REJECTED")) {
             throw new AppException("Invalid status", HttpStatus.BAD_REQUEST);
         }
@@ -161,6 +163,10 @@ public class ApplicationService {
         if (!job.getClerkUserId().equals(clerkUserId)) {
             throw new AppException("You can only update applications for your own jobs", HttpStatus.FORBIDDEN);
         }
+
+        // Validate status transitions
+        String currentStatus = application.getStatus();
+        validateStatusTransition(currentStatus, status);
 
         // Update status
         application.setStatus(status);
@@ -174,12 +180,14 @@ public class ApplicationService {
 
     /**
      * Update application status with rejection reason (for recruiter)
+     * Status flow: PENDING → UNDER_REVIEW → ACCEPTED/REJECTED
+     * ACCEPTED and REJECTED are final states
      */
     public String updateApplicationStatusWithReason(String clerkUserId, String applicationId, String status, String rejectionReason) {
         log.info("Updating application {} status to {} with reason", applicationId, status);
 
         // Validate status
-        if (!status.equals("PENDING") && !status.equals("REVIEWED") && 
+        if (!status.equals("PENDING") && !status.equals("UNDER_REVIEW") && 
             !status.equals("ACCEPTED") && !status.equals("REJECTED")) {
             throw new AppException("Invalid status", HttpStatus.BAD_REQUEST);
         }
@@ -194,6 +202,10 @@ public class ApplicationService {
             throw new AppException("You can only update applications for your own jobs", HttpStatus.FORBIDDEN);
         }
 
+        // Validate status transitions
+        String currentStatus = application.getStatus();
+        validateStatusTransition(currentStatus, status);
+
         // Update status and rejection reason
         application.setStatus(status);
         if ("REJECTED".equals(status) && rejectionReason != null) {
@@ -205,6 +217,43 @@ public class ApplicationService {
         log.info("Application status updated successfully");
 
         return "Application status updated successfully!";
+    }
+
+    /**
+     * Validate status transitions
+     * Valid transitions:
+     * - PENDING → UNDER_REVIEW
+     * - UNDER_REVIEW → ACCEPTED, REJECTED
+     * - ACCEPTED → (final, no changes allowed)
+     * - REJECTED → (final, no changes allowed)
+     */
+    private void validateStatusTransition(String currentStatus, String newStatus) {
+        // If same status, no change needed
+        if (currentStatus.equals(newStatus)) {
+            return;
+        }
+
+        // ACCEPTED and REJECTED are final states
+        if ("ACCEPTED".equals(currentStatus)) {
+            throw new AppException("Cannot change status of an accepted application", HttpStatus.BAD_REQUEST);
+        }
+        if ("REJECTED".equals(currentStatus)) {
+            throw new AppException("Cannot change status of a rejected application", HttpStatus.BAD_REQUEST);
+        }
+
+        // From PENDING, can only go to UNDER_REVIEW
+        if ("PENDING".equals(currentStatus)) {
+            if (!"UNDER_REVIEW".equals(newStatus)) {
+                throw new AppException("Pending applications must be reviewed first before accepting or rejecting", HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        // From UNDER_REVIEW, can go to ACCEPTED or REJECTED
+        if ("UNDER_REVIEW".equals(currentStatus)) {
+            if (!"ACCEPTED".equals(newStatus) && !"REJECTED".equals(newStatus)) {
+                throw new AppException("Applications under review can only be accepted or rejected", HttpStatus.BAD_REQUEST);
+            }
+        }
     }
 
     /**
