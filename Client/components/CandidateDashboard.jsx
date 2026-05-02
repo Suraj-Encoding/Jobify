@@ -57,8 +57,8 @@ const CandidateDashboard = ({ userData }) => {
         e.preventDefault();
         try {
             const response = await applyToJob(user.id, {
-                jobId: selectedJob._id,
-                coverLetter: coverLetter
+                job_id: selectedJob._id,
+                cover_letter: coverLetter
             });
             if (response.success) {
                 toast.success("Application submitted successfully!");
