@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import RoleSelector from "@/components/RoleSelector";
 import RecruiterDashboard from "@/components/RecruiterDashboard";
 import CandidateDashboard from "@/components/CandidateDashboard";
@@ -45,25 +46,29 @@ const HomePage = () => {
     // # No User Data - Show Role Selector
     if (!userData || !userData.role) {
         return (
-            <>
+            <div className="min-h-screen flex flex-col">
                 <Navbar />
                 <RoleSelector onRoleSelected={fetchUserData} />
+                <Footer />
                 <Toast />
-            </>
+            </div>
         );
     }
 
     // # Render Dashboard Based on Role
     return (
-        <>
+        <div className="min-h-screen flex flex-col">
             <Navbar userData={userData} />
-            {userData.role === "RECRUITER" ? (
-                <RecruiterDashboard userData={userData} />
-            ) : (
-                <CandidateDashboard userData={userData} />
-            )}
+            <div className="flex-1">
+                {userData.role === "RECRUITER" ? (
+                    <RecruiterDashboard userData={userData} />
+                ) : (
+                    <CandidateDashboard userData={userData} />
+                )}
+            </div>
+            <Footer />
             <Toast />
-        </>
+        </div>
     );
 };
 
