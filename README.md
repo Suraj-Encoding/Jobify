@@ -44,7 +44,7 @@ Jobify is a simple, full-stack job portal application built with Java Spring Boo
 
 ## Project Structure (high level)
 
-- `Server/Java/` — Java Spring Boot backend, API handlers, services, and MongoDB integration
+- `Server/` — Java Spring Boot backend, API handlers, services, and MongoDB integration
 - `Client/` — Next.js frontend, components, and Clerk auth routes
 - `README.md` — This file
 
@@ -71,14 +71,14 @@ git clone https://github.com/<your-github-username>/Jobify.git .
 
 Before running the app locally or deploying, make sure your runtime configuration is in place:
 
-- **Local development:** copy `Server/Java/.env.example` to `Server/Java/.env` and `Client/.env.example` to `Client/.env`, then open those files and fill in values specific to your environment.
+- **Local development:** copy `Server/.env.example` to `Server/.env` and `Client/.env.example` to `Client/.env`, then open those files and fill in values specific to your environment.
 
 - **Production:** configure required settings and secrets in your hosting platform's environment manager (Vercel, Render, etc.).
 
 ### 3. Run the backend
 
 ```bash
-cd Server/Java
+cd Server
 mvn clean package -DskipTests
 java -jar target/jobify-1.0.0.jar
 ```
@@ -86,7 +86,7 @@ java -jar target/jobify-1.0.0.jar
 Or using Maven directly:
 
 ```bash
-cd Server/Java
+cd Server
 mvn spring-boot:run
 ```
 
@@ -161,7 +161,7 @@ Base URL: `/api/v1`
 ### Render (Backend)
 
 1. Create a new Web Service on Render
-2. Set the root directory to `Server/Java`
+2. Set the root directory to `Server`
 3. Build command: `mvn clean package -DskipTests`
 4. Start command: `java -jar target/jobify-1.0.0.jar`
 5. Configure environment variables
