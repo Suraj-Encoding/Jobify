@@ -1,0 +1,24 @@
+## Git Ignore Files ##
+
+# 'OS Waste' File
+*.DS_Store
+Thumbs.db
+
+# 'IDE Waste' Files
+.idea/
+*.iml
+*.vscode
+
+# 'Env' File
+*.env
+
+# 'Log' Files
+*.log
+
+# 'Compiled Class' Files
+target/
+
+# 'Maven Wrapper' Files
+.mvn/
+mvnw
+mvnw.cmd

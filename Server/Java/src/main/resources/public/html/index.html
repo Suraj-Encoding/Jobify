@@ -1,0 +1,137 @@
+<!-- # Jobify Server → "Home Page" # -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- # Website 'Title' # -->
+    <title> Jobify — Find Your Dream Job </title>
+
+    <!-- # Website 'Description' -->
+    <meta name="description" content="Jobify is a simple job portal for recruiters and candidates." />
+    <meta name="author" content="Jobify" />
+
+    <!-- # Website 'Style' # -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            color: #111827;
+            background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .container {
+            text-align: center;
+            padding: 2.5rem 3rem;
+            background: #ffffff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            border-radius: 16px;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: fadeIn 1s ease forwards;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+
+        h2 {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 0.4s;
+            opacity: 0;
+        }
+
+        .badge-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 0.6s;
+            opacity: 0;
+        }
+
+        .server-spin {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #16a34a;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #16a34a;
+            background: #d9f7ec;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="emoji">💼</div>
+        <h1>Welcome to Jobify</h1>
+        <h2>Find Your Dream Job</h2>
+        <div class="badge-container">
+            <div class="server-spin"></div>
+            <span class="badge">Server Running</span>
+        </div>
+    </div>
+</body>
+
+</html>

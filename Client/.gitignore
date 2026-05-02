@@ -1,0 +1,41 @@
+## Git Ignore Files ##
+
+# 'Git' Folder
+*.git
+
+# 'OS Waste' File
+*.DS_Store
+
+# 'Env' File
+*.env
+
+# 'Vercel Waste' File
+*.vercel
+
+# 'VSCode Waste' File
+*.vscode
+
+# 'Local' File
+*.local
+
+# 'Logs' File
+*.log
+
+# Typescript 'Cache' File
+*.tsbuildinfo
+next-env.d.ts
+
+# 'Dependencies' Folder
+/node_modules
+
+# Next 'Production Build' Folder
+/out
+
+# 'Coverage' Folder
+/coverage
+
+# 'Logs' Folder
+/logs
+
+# Next 'Runtime' Folder
+/.next
