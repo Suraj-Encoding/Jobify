@@ -108,6 +108,65 @@ public class JobService {
     }
 
     /**
+     * Update a job
+     * Only the recruiter who posted it can update
+     */
+    public String updateJob(String clerkUserId, String jobId, JobRequest.JobData jobData) {
+        log.info("Updating job: {} by recruiter: {}", jobId, clerkUserId);
+
+        Job job = getJobById(jobId);
+
+        // Verify ownership
+        if (!job.getClerkUserId().equals(clerkUserId)) {
+            throw new AppException("You can only update your own jobs", HttpStatus.FORBIDDEN);
+        }
+
+        // Update fields
+        if (jobData.getTitle() != null && !jobData.getTitle().trim().isEmpty()) {
+            job.setTitle(jobData.getTitle().trim());
+        }
+        if (jobData.getDescription() != null) {
+            job.setDescription(jobData.getDescription().trim());
+        }
+        if (jobData.getLocation() != null) {
+            job.setLocation(jobData.getLocation().trim());
+        }
+        if (jobData.getSalary() != null) {
+            job.setSalary(jobData.getSalary().trim());
+        }
+        if (jobData.getCompany() != null) {
+            job.setCompany(jobData.getCompany().trim());
+        }
+        if (jobData.getType() != null) {
+            job.setType(jobData.getType().trim());
+        }
+        if (jobData.getExperience() != null) {
+            job.setExperience(jobData.getExperience().trim());
+        }
+        if (jobData.getSkills() != null) {
+            job.setSkills(jobData.getSkills().trim());
+        }
+        if (jobData.getRequirements() != null) {
+            job.setRequirements(jobData.getRequirements().trim());
+        }
+        if (jobData.getBenefits() != null) {
+            job.setBenefits(jobData.getBenefits().trim());
+        }
+        if (jobData.getDeadline() != null) {
+            job.setDeadline(jobData.getDeadline().trim());
+        }
+        if (jobData.getMaxApplications() != null) {
+            job.setMaxApplications(jobData.getMaxApplications());
+        }
+
+        job.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
+        jobRepository.save(job);
+
+        log.info("Job updated successfully");
+        return "Job updated successfully!";
+    }
+
+    /**
      * Update application count for a job
      */
     public void incrementApplicationCount(String jobId) {

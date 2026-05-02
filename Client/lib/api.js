@@ -91,6 +91,19 @@ export const createJob = async (clerkUserId, jobData) => {
     });
 };
 
+// # Update Job #
+export const updateJob = async (clerkUserId, jobId, jobData) => {
+    return await apiRequest(`/job/${jobId}`, {
+        method: "PUT",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+        body: JSON.stringify({
+            data: jobData,
+        }),
+    });
+};
+
 // # Delete Job #
 export const deleteJob = async (clerkUserId, jobId) => {
     return await apiRequest(`/job/${jobId}`, {

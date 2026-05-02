@@ -71,6 +71,21 @@ public class JobController {
     }
 
     /**
+     * Update Job - Update an existing job posting (Recruiter only)
+     * PUT /api/v1/job/{jobId}
+     * Header: clerk-user-id
+     */
+    @PutMapping("/{jobId}")
+    public ResponseEntity<ApiResponse<Void>> updateJob(
+            @RequestHeader("clerk-user-id") String clerkUserId,
+            @PathVariable String jobId,
+            @RequestBody JobRequest request) {
+        
+        String result = jobService.updateJob(clerkUserId, jobId, request.getData());
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /**
      * Delete Job - Delete a job posting (Recruiter only)
      * DELETE /api/v1/job/{jobId}
      * Header: clerk-user-id

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { getMyJobs, createJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl } from "@/lib/api";
-import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut } from "lucide-react";
+import { getMyJobs, createJob, updateJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl } from "@/lib/api";
+import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut, Edit2 } from "lucide-react";
 
 // Job Type Options
 const JOB_TYPES = [
@@ -41,6 +41,10 @@ const RecruiterDashboard = ({ userData }) => {
     const [showResumeViewer, setShowResumeViewer] = useState(false);
     const [resumeViewUrl, setResumeViewUrl] = useState("");
     const [pdfZoom, setPdfZoom] = useState(100);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [jobToDelete, setJobToDelete] = useState(null);
+    const [editingJob, setEditingJob] = useState(null);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -96,16 +100,66 @@ const RecruiterDashboard = ({ userData }) => {
         }
     };
 
+    // # Open Delete Confirmation
+    const openDeleteModal = (job) => {
+        setJobToDelete(job);
+        setShowDeleteModal(true);
+    };
+
     // # Handle Delete Job
-    const handleDeleteJob = async (jobId) => {
-        if (!confirm("Are you sure you want to delete this job?")) return;
+    const handleDeleteJob = async () => {
+        if (!jobToDelete) return;
         try {
-            const response = await deleteJob(user.id, jobId);
+            const response = await deleteJob(user.id, jobToDelete._id);
             if (response.success) {
                 toast.success("Job deleted successfully!");
+                setShowDeleteModal(false);
+                setJobToDelete(null);
                 fetchJobs();
             } else {
                 toast.error(response.message || "Failed to delete job");
+            }
+        } catch (error) {
+            toast.error("An error occurred. Please try again.");
+        }
+    };
+
+    // # Open Edit Modal
+    const openEditModal = (job) => {
+        setEditingJob(job);
+        setFormData({
+            title: job.title || "",
+            description: job.description || "",
+            location: job.location || "",
+            salary: job.salary || "",
+            company: job.company || "",
+            type: job.type || "FULL_TIME",
+            experience: job.experience || "",
+            skills: job.skills || "",
+            requirements: job.requirements || "",
+            benefits: job.benefits || "",
+            deadline: job.deadline || "",
+            max_applications: job.max_applications || ""
+        });
+        setShowEditModal(true);
+    };
+
+    // # Handle Update Job
+    const handleUpdateJob = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await updateJob(user.id, editingJob._id, formData);
+            if (response.success) {
+                toast.success("Job updated successfully!");
+                setShowEditModal(false);
+                setEditingJob(null);
+                setFormData({
+                    title: "", description: "", location: "", salary: "", company: "",
+                    type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                });
+                fetchJobs();
+            } else {
+                toast.error(response.message || "Failed to update job");
             }
         } catch (error) {
             toast.error("An error occurred. Please try again.");
@@ -249,12 +303,22 @@ const RecruiterDashboard = ({ userData }) => {
                                             </span>
                                         )}
                                     </div>
-                                    <button
-                                        onClick={() => handleDeleteJob(job._id)}
-                                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+                                    <div className="flex items-center space-x-1">
+                                        <button
+                                            onClick={() => openEditModal(job)}
+                                            className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                                            title="Edit Job"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => openDeleteModal(job)}
+                                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                            title="Delete Job"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-2">{job.company}</p>
                                 <p className="text-sm text-gray-500 mb-2">{job.location}</p>
@@ -648,6 +712,211 @@ const RecruiterDashboard = ({ userData }) => {
                                     title="Resume"
                                 />
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* # Edit Job Modal # */}
+            {showEditModal && editingJob && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-semibold text-gray-900">Edit Job</h3>
+                            <button onClick={() => { setShowEditModal(false); setEditingJob(null); }} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateJob} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.company}
+                                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Type *</label>
+                                    <select
+                                        required
+                                        value={formData.type}
+                                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    >
+                                        {JOB_TYPES.map((type) => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                                    <select
+                                        value={formData.experience}
+                                        onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    >
+                                        <option value="">Select experience</option>
+                                        {EXPERIENCE_LEVELS.map((exp) => (
+                                            <option key={exp.value} value={exp.value}>{exp.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.location}
+                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
+                                    <input
+                                        type="text"
+                                        value={formData.salary}
+                                        onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Required Skills</label>
+                                <input
+                                    type="text"
+                                    value={formData.skills}
+                                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    placeholder="e.g. React, Node.js, MongoDB"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Job Description *</label>
+                                <textarea
+                                    required
+                                    rows={3}
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                                <textarea
+                                    rows={3}
+                                    value={formData.requirements}
+                                    onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Benefits</label>
+                                <textarea
+                                    rows={2}
+                                    value={formData.benefits}
+                                    onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
+                                    <input
+                                        type="date"
+                                        value={formData.deadline}
+                                        onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Applications</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={formData.max_applications}
+                                        onChange={(e) => setFormData({ ...formData, max_applications: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="Leave empty for unlimited"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end space-x-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowEditModal(false); setEditingJob(null); }}
+                                    className="px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                                >
+                                    Update Job
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* # Delete Confirmation Modal # */}
+            {showDeleteModal && jobToDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
+                    <div className="bg-white rounded-xl max-w-md w-full p-6">
+                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                            <Trash2 className="w-6 h-6 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Delete Job</h3>
+                        <p className="text-gray-600 text-center mb-2">
+                            Are you sure you want to delete this job?
+                        </p>
+                        <p className="text-gray-900 font-medium text-center mb-4">
+                            "{jobToDelete.title}"
+                        </p>
+                        <p className="text-sm text-red-600 text-center mb-6">
+                            This action cannot be undone. All applications for this job will also be affected.
+                        </p>
+                        <div className="flex justify-center space-x-3">
+                            <button
+                                onClick={() => { setShowDeleteModal(false); setJobToDelete(null); }}
+                                className="px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors border border-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteJob}
+                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                Delete Job
+                            </button>
                         </div>
                     </div>
                 </div>
