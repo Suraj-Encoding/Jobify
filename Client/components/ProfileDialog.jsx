@@ -50,6 +50,7 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
         experience_level: "",
         current_title: "",
         education_degree: "",
+        custom_education_degree: "",
         education_college: "",
         portfolio_url: "",
         expected_salary: "",
@@ -60,6 +61,7 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
         company_email: "",
         company_phone: "",
         industry: "",
+        custom_industry: "",
         company_size: "",
         headquarters: "",
         company_description: "",
@@ -70,6 +72,11 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
     // # Effect: Populate form data from userData #
     useEffect(() => {
         if (userData) {
+            // Check if industry is a custom value (not in predefined list)
+            const isCustomIndustry = userData.industry && !INDUSTRIES.includes(userData.industry);
+            // Check if education_degree is a custom value (not in predefined list)
+            const isCustomEducation = userData.education_degree && !EDUCATION_OPTIONS.includes(userData.education_degree);
+
             setFormData({
                 phone: userData.phone || "",
                 location: userData.location || "",
@@ -78,7 +85,8 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 skills: userData.skills || "",
                 experience_level: userData.experience_level || "",
                 current_title: userData.current_title || "",
-                education_degree: userData.education_degree || "",
+                education_degree: isCustomEducation ? "Other" : (userData.education_degree || ""),
+                custom_education_degree: isCustomEducation ? userData.education_degree : "",
                 education_college: userData.education_college || "",
                 portfolio_url: userData.portfolio_url || "",
                 expected_salary: userData.expected_salary || "",
@@ -87,7 +95,8 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 company_website: userData.company_website || "",
                 company_email: userData.company_email || "",
                 company_phone: userData.company_phone || "",
-                industry: userData.industry || "",
+                industry: isCustomIndustry ? "Other" : (userData.industry || ""),
+                custom_industry: isCustomIndustry ? userData.industry : "",
                 company_size: userData.company_size || "",
                 headquarters: userData.headquarters || "",
                 company_description: userData.company_description || "",
@@ -157,7 +166,21 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
         setLoading(true);
 
         try {
-            const response = await updateProfile(clerkUserId, formData);
+            // Replace "Other" with custom values
+            const submitData = {
+                ...formData,
+                industry: formData.industry === "Other" && formData.custom_industry
+                    ? formData.custom_industry
+                    : formData.industry,
+                education_degree: formData.education_degree === "Other" && formData.custom_education_degree
+                    ? formData.custom_education_degree
+                    : formData.education_degree,
+            };
+            // Remove custom fields before sending
+            delete submitData.custom_industry;
+            delete submitData.custom_education_degree;
+
+            const response = await updateProfile(clerkUserId, submitData);
             if (response.success) {
                 toast.success("Profile updated successfully!");
                 onProfileUpdate?.(response.data);
@@ -286,6 +309,17 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                                                 <option key={ind} value={ind}>{ind}</option>
                                             ))}
                                         </select>
+                                        {formData.industry === "Other" && (
+                                            <input
+                                                type="text"
+                                                name="custom_industry"
+                                                value={formData.custom_industry}
+                                                onChange={handleChange}
+                                                placeholder="Enter your industry"
+                                                className="w-full mt-2 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        )}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -579,6 +613,17 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                                                 <option key={deg} value={deg}>{deg}</option>
                                             ))}
                                         </select>
+                                        {formData.education_degree === "Other" && (
+                                            <input
+                                                type="text"
+                                                name="custom_education_degree"
+                                                value={formData.custom_education_degree}
+                                                onChange={handleChange}
+                                                placeholder="Enter your degree"
+                                                className="w-full mt-2 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">College/University *</label>

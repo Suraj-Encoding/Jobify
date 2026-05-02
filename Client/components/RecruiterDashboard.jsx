@@ -15,7 +15,8 @@ const JOB_TYPES = [
     { value: "INTERNSHIP", label: "Internship" },
     { value: "CONTRACT", label: "Contract" },
     { value: "REMOTE", label: "Remote" },
-    { value: "FREELANCE", label: "Freelance" }
+    { value: "FREELANCE", label: "Freelance" },
+    { value: "OTHER", label: "Other" }
 ];
 
 // Experience Options
@@ -25,7 +26,8 @@ const EXPERIENCE_LEVELS = [
     { value: "3-5 years", label: "3-5 years" },
     { value: "5-7 years", label: "5-7 years" },
     { value: "7+ years", label: "7+ years" },
-    { value: "10+ years", label: "10+ years" }
+    { value: "10+ years", label: "10+ years" },
+    { value: "Other", label: "Other" }
 ];
 
 // # 'Recruiter Dashboard' Component #
@@ -58,7 +60,9 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
         salary: "",
         company: "",
         type: "FULL_TIME",
+        custom_type: "",
         experience: "",
+        custom_experience: "",
         skills: "",
         requirements: "",
         benefits: "",
@@ -109,13 +113,22 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
     const handleCreateJob = async (e) => {
         e.preventDefault();
         try {
-            const response = await createJob(user.id, formData);
+            // Replace "Other" with custom values
+            const submitData = {
+                ...formData,
+                type: formData.type === "OTHER" && formData.custom_type ? formData.custom_type : formData.type,
+                experience: formData.experience === "Other" && formData.custom_experience ? formData.custom_experience : formData.experience,
+            };
+            delete submitData.custom_type;
+            delete submitData.custom_experience;
+
+            const response = await createJob(user.id, submitData);
             if (response.success) {
                 toast.success("Job created successfully!");
                 setShowCreateModal(false);
                 setFormData({
                     title: "", description: "", location: "", salary: "", company: "",
-                    type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                    type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
                 });
                 fetchJobs();
             } else {
@@ -153,14 +166,21 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
     // # Open Edit Modal
     const openEditModal = (job) => {
         setEditingJob(job);
+        // Check if type is a custom value (not in predefined list)
+        const isCustomType = job.type && !JOB_TYPES.some(t => t.value === job.type);
+        // Check if experience is a custom value (not in predefined list)
+        const isCustomExperience = job.experience && !EXPERIENCE_LEVELS.some(e => e.value === job.experience);
+
         setFormData({
             title: job.title || "",
             description: job.description || "",
             location: job.location || "",
             salary: job.salary || "",
             company: job.company || "",
-            type: job.type || "FULL_TIME",
-            experience: job.experience || "",
+            type: isCustomType ? "OTHER" : (job.type || "FULL_TIME"),
+            custom_type: isCustomType ? job.type : "",
+            experience: isCustomExperience ? "Other" : (job.experience || ""),
+            custom_experience: isCustomExperience ? job.experience : "",
             skills: job.skills || "",
             requirements: job.requirements || "",
             benefits: job.benefits || "",
@@ -174,14 +194,23 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
     const handleUpdateJob = async (e) => {
         e.preventDefault();
         try {
-            const response = await updateJob(user.id, editingJob._id, formData);
+            // Replace "Other" with custom values
+            const submitData = {
+                ...formData,
+                type: formData.type === "OTHER" && formData.custom_type ? formData.custom_type : formData.type,
+                experience: formData.experience === "Other" && formData.custom_experience ? formData.custom_experience : formData.experience,
+            };
+            delete submitData.custom_type;
+            delete submitData.custom_experience;
+
+            const response = await updateJob(user.id, editingJob._id, submitData);
             if (response.success) {
                 toast.success("Job updated successfully!");
                 setShowEditModal(false);
                 setEditingJob(null);
                 setFormData({
                     title: "", description: "", location: "", salary: "", company: "",
-                    type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                    type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
                 });
                 fetchJobs();
             } else {
@@ -355,7 +384,7 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                             }
                             setFormData({
                                 title: "", description: "", location: "", salary: "", company: userData?.company_name || "",
-                                type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                                type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
                             });
                             setShowCreateModal(true);
                         }}
@@ -491,19 +520,29 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                     <select
                                         required
                                         value={formData.type}
-                                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, type: e.target.value, custom_type: "" })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     >
                                         {JOB_TYPES.map((type) => (
                                             <option key={type.value} value={type.value}>{type.label}</option>
                                         ))}
                                     </select>
+                                    {formData.type === "OTHER" && (
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.custom_type}
+                                            onChange={(e) => setFormData({ ...formData, custom_type: e.target.value })}
+                                            className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                            placeholder="Enter job type"
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
                                     <select
                                         value={formData.experience}
-                                        onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, experience: e.target.value, custom_experience: "" })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     >
                                         <option value="">Select experience</option>
@@ -511,6 +550,16 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                             <option key={exp.value} value={exp.value}>{exp.label}</option>
                                         ))}
                                     </select>
+                                    {formData.experience === "Other" && (
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.custom_experience}
+                                            onChange={(e) => setFormData({ ...formData, custom_experience: e.target.value })}
+                                            className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                            placeholder="Enter experience level"
+                                        />
+                                    )}
                                 </div>
                             </div>
 
@@ -1017,19 +1066,29 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                     <select
                                         required
                                         value={formData.type}
-                                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, type: e.target.value, custom_type: "" })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     >
                                         {JOB_TYPES.map((type) => (
                                             <option key={type.value} value={type.value}>{type.label}</option>
                                         ))}
                                     </select>
+                                    {formData.type === "OTHER" && (
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.custom_type}
+                                            onChange={(e) => setFormData({ ...formData, custom_type: e.target.value })}
+                                            className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                            placeholder="Enter job type"
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
                                     <select
                                         value={formData.experience}
-                                        onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, experience: e.target.value, custom_experience: "" })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     >
                                         <option value="">Select experience</option>
@@ -1037,6 +1096,16 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                             <option key={exp.value} value={exp.value}>{exp.label}</option>
                                         ))}
                                     </select>
+                                    {formData.experience === "Other" && (
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.custom_experience}
+                                            onChange={(e) => setFormData({ ...formData, custom_experience: e.target.value })}
+                                            className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                            placeholder="Enter experience level"
+                                        />
+                                    )}
                                 </div>
                             </div>
 
