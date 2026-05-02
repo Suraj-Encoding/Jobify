@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { getMyJobs, createJob, updateJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl, getUser, getLogoViewUrl } from "@/lib/api";
-import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut, Edit2, Table2, Building2, Settings, AlertTriangle } from "lucide-react";
+import { getMyJobs, createJob, updateJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl, getUser, getLogoViewUrl, getCoverLetterViewUrl } from "@/lib/api";
+import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, Edit2, Table2, Building2, Settings, AlertTriangle, FileUp } from "lucide-react";
 import ProfileDialog from "@/components/ProfileDialog";
+import PDFViewer from "@/components/PDFViewer";
 
 // Job Type Options
 const JOB_TYPES = [
@@ -39,9 +40,10 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [applications, setApplications] = useState([]);
     const [rejectionReason, setRejectionReason] = useState("");
-    const [showResumeViewer, setShowResumeViewer] = useState(false);
-    const [resumeViewUrl, setResumeViewUrl] = useState("");
-    const [pdfZoom, setPdfZoom] = useState(100);
+    // PDF Viewer state
+    const [showPDFViewer, setShowPDFViewer] = useState(false);
+    const [pdfViewerUrl, setPdfViewerUrl] = useState("");
+    const [pdfViewerTitle, setPdfViewerTitle] = useState("PDF Viewer");
     const [showExcelPreview, setShowExcelPreview] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -247,12 +249,12 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
         }
     };
 
-    // # View Resume
-    const handleViewResume = (resumeUrl) => {
-        if (resumeUrl) {
-            setResumeViewUrl(getResumeViewUrl(resumeUrl));
-            setPdfZoom(100);
-            setShowResumeViewer(true);
+    // # Open PDF Viewer (for resume or cover letter)
+    const openPDFViewer = (url, title) => {
+        if (url) {
+            setPdfViewerUrl(url);
+            setPdfViewerTitle(title);
+            setShowPDFViewer(true);
         }
     };
 
@@ -678,25 +680,31 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                             </span>
                                         </div>
 
-                                        {/* Resume Link */}
-                                        {app.resume_url && (
-                                            <div className="mb-3">
+                                        {/* Documents - Resume and Cover Letter */}
+                                        <div className="flex flex-wrap gap-3 mb-3">
+                                            {/* Resume Link */}
+                                            {app.resume_url && (
                                                 <button
-                                                    onClick={() => handleViewResume(app.resume_url)}
-                                                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
+                                                    onClick={() => openPDFViewer(getResumeViewUrl(app.resume_url), "Resume")}
+                                                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded-lg transition-colors"
                                                 >
                                                     <FileText className="w-4 h-4 mr-1" />
                                                     View Resume
                                                     <ExternalLink className="w-3 h-3 ml-1" />
                                                 </button>
-                                            </div>
-                                        )}
-
-                                        {app.cover_letter && (
-                                            <p className="text-sm text-gray-600 mb-3 bg-gray-50 p-3 rounded-lg">
-                                                <span className="font-medium">Cover Letter: </span>{app.cover_letter}
-                                            </p>
-                                        )}
+                                            )}
+                                            {/* Cover Letter Link */}
+                                            {app.cover_letter_url && (
+                                                <button
+                                                    onClick={() => openPDFViewer(getCoverLetterViewUrl(app.cover_letter_url), "Cover Letter")}
+                                                    className="inline-flex items-center text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-2 py-1 rounded-lg transition-colors"
+                                                >
+                                                    <FileUp className="w-4 h-4 mr-1" />
+                                                    View Cover Letter
+                                                    <ExternalLink className="w-3 h-3 ml-1" />
+                                                </button>
+                                            )}
+                                        </div>
 
                                         {/* Rejection Reason */}
                                         {app.status === "REJECTED" && app.rejection_reason && (
@@ -786,73 +794,13 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                 </div>
             )}
 
-            {/* # Resume Viewer Modal # */}
-            {showResumeViewer && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[70] p-4">
-                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-                            <h3 className="text-lg font-semibold text-gray-900">Resume Viewer</h3>
-                            <div className="flex items-center space-x-1">
-                                <button
-                                    onClick={() => setPdfZoom(Math.max(50, pdfZoom - 25))}
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Zoom Out"
-                                >
-                                    <ZoomOut className="w-5 h-5" />
-                                </button>
-                                <span className="text-sm text-gray-600 min-w-[60px] text-center font-medium">{pdfZoom}%</span>
-                                <button
-                                    onClick={() => setPdfZoom(Math.min(200, pdfZoom + 25))}
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Zoom In"
-                                >
-                                    <ZoomIn className="w-5 h-5" />
-                                </button>
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                                <a
-                                    href={resumeViewUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Open in New Tab"
-                                >
-                                    <ExternalLink className="w-5 h-5" />
-                                </a>
-                                <a
-                                    href={resumeViewUrl.replace('/view', '/download')}
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Download"
-                                >
-                                    <Download className="w-5 h-5" />
-                                </a>
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                                <button
-                                    onClick={() => setShowResumeViewer(false)}
-                                    className="p-2 text-gray-600 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors"
-                                    title="Close"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        {/* PDF Content */}
-                        <div className="flex-1 overflow-auto bg-gray-100">
-                            <div
-                                className="min-h-full flex justify-center p-6"
-                                style={{ transform: `scale(${pdfZoom / 100})`, transformOrigin: 'top center' }}
-                            >
-                                <embed
-                                    src={resumeViewUrl + '#toolbar=0&navpanes=0&scrollbar=1'}
-                                    type="application/pdf"
-                                    className="bg-white shadow-xl rounded"
-                                    style={{ width: '850px', height: '1100px' }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* # PDF Viewer (for Resume and Cover Letter) # */}
+            <PDFViewer
+                isOpen={showPDFViewer}
+                onClose={() => setShowPDFViewer(false)}
+                pdfUrl={pdfViewerUrl}
+                title={pdfViewerTitle}
+            />
 
             {/* # Excel Preview Modal # */}
             {showExcelPreview && selectedJob && (
@@ -922,15 +870,22 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                                         {app.status === "UNDER_REVIEW" ? "Under Review" : app.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200 max-w-xs">
-                                                    <p className="truncate" title={app.cover_letter}>
-                                                        {app.cover_letter ? (app.cover_letter.length > 50 ? app.cover_letter.substring(0, 50) + "..." : app.cover_letter) : "-"}
-                                                    </p>
+                                                <td className="px-4 py-3 text-sm border border-gray-200">
+                                                    {app.cover_letter_url ? (
+                                                        <button
+                                                            onClick={() => openPDFViewer(getCoverLetterViewUrl(app.cover_letter_url), "Cover Letter")}
+                                                            className="text-purple-600 hover:text-purple-800 underline font-medium"
+                                                        >
+                                                            View Cover Letter
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-400">No cover letter</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3 text-sm border border-gray-200">
                                                     {app.resume_url ? (
                                                         <button
-                                                            onClick={() => handleViewResume(app.resume_url)}
+                                                            onClick={() => openPDFViewer(getResumeViewUrl(app.resume_url), "Resume")}
                                                             className="text-blue-600 hover:text-blue-800 underline font-medium"
                                                         >
                                                             View Resume

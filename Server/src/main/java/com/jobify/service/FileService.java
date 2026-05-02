@@ -2,8 +2,10 @@ package com.jobify.service;
 
 import com.jobify.exception.AppException;
 import com.jobify.model.CompanyLogo;
+import com.jobify.model.CoverLetter;
 import com.jobify.model.Resume;
 import com.jobify.repository.CompanyLogoRepository;
+import com.jobify.repository.CoverLetterRepository;
 import com.jobify.repository.ResumeRepository;
 import com.jobify.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class FileService {
 
     private final ResumeRepository resumeRepository;
     private final CompanyLogoRepository companyLogoRepository;
+    private final CoverLetterRepository coverLetterRepository;
 
     // Max file size: 5MB
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -249,6 +252,82 @@ public class FileService {
 
         if (!validType) {
             throw new AppException("Invalid file type. Only PNG, JPEG, GIF, and WebP images are allowed", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // ==================== COVER LETTER METHODS ====================
+
+    /**
+     * Upload cover letter (each upload creates a new document)
+     */
+    public CoverLetter uploadCoverLetter(String clerkUserId, MultipartFile file) throws IOException {
+        log.info("Uploading cover letter for user: {}", clerkUserId);
+
+        // Validate PDF file
+        validatePdfFile(file);
+
+        // Convert file to base64
+        String base64Data = Base64.getEncoder().encodeToString(file.getBytes());
+
+        // Create cover letter document
+        CoverLetter coverLetter = CoverLetter.builder()
+                .clerkUserId(clerkUserId)
+                .fileName(file.getOriginalFilename())
+                .contentType(file.getContentType())
+                .fileSize(file.getSize())
+                .fileData(base64Data)
+                .createdAt(TimeUtils.getCurrentTimeInIST())
+                .build();
+
+        coverLetterRepository.save(coverLetter);
+        log.info("Cover letter uploaded successfully: {}", coverLetter.getId());
+
+        // Clear file data from response (too large)
+        coverLetter.setFileData(null);
+        return coverLetter;
+    }
+
+    /**
+     * Get cover letter by ID
+     */
+    public CoverLetter getCoverLetter(String coverLetterId) {
+        return coverLetterRepository.findById(coverLetterId)
+                .orElseThrow(() -> new AppException("Cover letter not found", HttpStatus.NOT_FOUND));
+    }
+
+    /**
+     * Get cover letter data (for viewing/downloading)
+     */
+    public byte[] getCoverLetterData(String coverLetterId) {
+        CoverLetter coverLetter = getCoverLetter(coverLetterId);
+        return Base64.getDecoder().decode(coverLetter.getFileData());
+    }
+
+    /**
+     * Delete cover letter by ID
+     */
+    public void deleteCoverLetter(String coverLetterId) {
+        if (coverLetterRepository.existsById(coverLetterId)) {
+            coverLetterRepository.deleteById(coverLetterId);
+            log.info("Cover letter deleted: {}", coverLetterId);
+        }
+    }
+
+    /**
+     * Validate PDF file (for cover letters - only PDF allowed)
+     */
+    private void validatePdfFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new AppException("File is empty", HttpStatus.BAD_REQUEST);
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new AppException("File size exceeds 5MB limit", HttpStatus.BAD_REQUEST);
+        }
+
+        String contentType = file.getContentType();
+        if (!"application/pdf".equals(contentType)) {
+            throw new AppException("Invalid file type. Only PDF files are allowed for cover letters", HttpStatus.BAD_REQUEST);
         }
     }
 }

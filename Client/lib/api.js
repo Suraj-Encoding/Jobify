@@ -259,3 +259,31 @@ export const deleteLogo = async (clerkUserId) => {
         },
     });
 };
+
+// # Upload Cover Letter (PDF only) #
+export const uploadCoverLetter = async (clerkUserId, file) => {
+    const url = `${API_BASE_URL}${API_VERSION}/file/cover-letter`;
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+        body: formData,
+    });
+    return response.json();
+};
+
+// # Get Cover Letter View URL #
+export const getCoverLetterViewUrl = (coverLetterId) => {
+    return `${API_BASE_URL}${API_VERSION}/file/cover-letter/${coverLetterId}/view`;
+};
+
+// # Delete Cover Letter #
+export const deleteCoverLetter = async (coverLetterId) => {
+    return await apiRequest(`/file/cover-letter/${coverLetterId}`, {
+        method: "DELETE",
+    });
+};

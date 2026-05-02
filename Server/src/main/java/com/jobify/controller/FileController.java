@@ -2,6 +2,7 @@ package com.jobify.controller;
 
 import com.jobify.dto.ApiResponse;
 import com.jobify.model.CompanyLogo;
+import com.jobify.model.CoverLetter;
 import com.jobify.model.Resume;
 import com.jobify.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -163,5 +164,82 @@ public class FileController {
         
         fileService.deleteLogo(clerkUserId);
         return ResponseEntity.ok(ApiResponse.success("Logo deleted successfully"));
+    }
+
+    // ==================== COVER LETTER ENDPOINTS ====================
+
+    /**
+     * Upload Cover Letter (PDF only)
+     * POST /api/v1/file/cover-letter
+     * Header: clerk-user-id
+     * Body: multipart/form-data with "file" field
+     */
+    @PostMapping(value = "/cover-letter", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CoverLetter>> uploadCoverLetter(
+            @RequestHeader("clerk-user-id") String clerkUserId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        
+        CoverLetter coverLetter = fileService.uploadCoverLetter(clerkUserId, file);
+        return ResponseEntity.ok(ApiResponse.success("Cover letter uploaded successfully", coverLetter));
+    }
+
+    /**
+     * Get Cover Letter metadata
+     * GET /api/v1/file/cover-letter/{coverLetterId}
+     */
+    @GetMapping("/cover-letter/{coverLetterId}")
+    public ResponseEntity<ApiResponse<CoverLetter>> getCoverLetter(@PathVariable String coverLetterId) {
+        CoverLetter coverLetter = fileService.getCoverLetter(coverLetterId);
+        // Don't send file data in metadata response
+        coverLetter.setFileData(null);
+        return ResponseEntity.ok(ApiResponse.success("Cover letter fetched successfully", coverLetter));
+    }
+
+    /**
+     * View/Download Cover Letter file
+     * GET /api/v1/file/cover-letter/{coverLetterId}/view
+     */
+    @GetMapping("/cover-letter/{coverLetterId}/view")
+    public ResponseEntity<byte[]> viewCoverLetter(@PathVariable String coverLetterId) {
+        CoverLetter coverLetter = fileService.getCoverLetter(coverLetterId);
+        byte[] data = fileService.getCoverLetterData(coverLetterId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(coverLetter.getContentType()));
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + coverLetter.getFileName() + "\"");
+        headers.setContentLength(data.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(data);
+    }
+
+    /**
+     * Download Cover Letter file
+     * GET /api/v1/file/cover-letter/{coverLetterId}/download
+     */
+    @GetMapping("/cover-letter/{coverLetterId}/download")
+    public ResponseEntity<byte[]> downloadCoverLetter(@PathVariable String coverLetterId) {
+        CoverLetter coverLetter = fileService.getCoverLetter(coverLetterId);
+        byte[] data = fileService.getCoverLetterData(coverLetterId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + coverLetter.getFileName() + "\"");
+        headers.setContentLength(data.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(data);
+    }
+
+    /**
+     * Delete Cover Letter
+     * DELETE /api/v1/file/cover-letter/{coverLetterId}
+     */
+    @DeleteMapping("/cover-letter/{coverLetterId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCoverLetter(@PathVariable String coverLetterId) {
+        fileService.deleteCoverLetter(coverLetterId);
+        return ResponseEntity.ok(ApiResponse.success("Cover letter deleted successfully"));
     }
 }

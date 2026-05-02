@@ -50,10 +50,10 @@ public class Application {
     @JsonProperty("status")
     private String status;
 
-    // Optional cover letter or note from candidate
-    @Field("cover_letter")
-    @JsonProperty("cover_letter")
-    private String coverLetter;
+    // Cover letter file ID (required - uploaded PDF)
+    @Field("cover_letter_url")
+    @JsonProperty("cover_letter_url")
+    private String coverLetterUrl;
 
     // Resume URL (uploaded file)
     @Field("resume_url")

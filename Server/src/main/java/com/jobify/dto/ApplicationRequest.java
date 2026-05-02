@@ -32,9 +32,9 @@ public class ApplicationRequest {
         @JsonProperty("job_id")
         private String jobId;
 
-        // Cover letter or note (optional)
-        @JsonProperty("cover_letter")
-        private String coverLetter;
+        // Cover letter file ID (required - uploaded PDF)
+        @JsonProperty("cover_letter_id")
+        private String coverLetterId;
 
         // Resume ID (from uploaded resume)
         @JsonProperty("resume_id")

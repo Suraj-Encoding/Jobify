@@ -66,6 +66,16 @@ public class ApplicationService {
             throw new AppException("You have already applied to this job", HttpStatus.BAD_REQUEST);
         }
 
+        // Validate cover letter (required)
+        if (applicationData.getCoverLetterId() == null || applicationData.getCoverLetterId().trim().isEmpty()) {
+            throw new AppException("Cover letter is required", HttpStatus.BAD_REQUEST);
+        }
+
+        // Validate resume (required)
+        if (applicationData.getResumeId() == null || applicationData.getResumeId().trim().isEmpty()) {
+            throw new AppException("Resume is required", HttpStatus.BAD_REQUEST);
+        }
+
         LocalDateTime now = TimeUtils.getCurrentTimeInIST();
 
         // Build application object
@@ -74,7 +84,7 @@ public class ApplicationService {
                 .candidateId(candidate.getId())
                 .clerkUserId(clerkUserId)
                 .status("PENDING")
-                .coverLetter(applicationData.getCoverLetter())
+                .coverLetterUrl(applicationData.getCoverLetterId())
                 .resumeUrl(applicationData.getResumeId())
                 .candidateName(candidate.getFirstName() + " " + candidate.getLastName())
                 .candidateEmail(candidate.getEmail())

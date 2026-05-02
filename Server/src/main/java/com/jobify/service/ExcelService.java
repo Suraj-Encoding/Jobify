@@ -146,11 +146,19 @@ public class ExcelService {
                 cell3.setCellValue(formatStatus(app.getStatus()));
                 cell3.setCellStyle(getStatusStyle(app.getStatus(), pendingStyle, reviewedStyle, acceptedStyle, rejectedStyle, currentStyle));
 
-                // Cover Letter
+                // Cover Letter (as hyperlink)
                 Cell cell4 = row.createCell(4);
-                String coverLetter = app.getCoverLetter() != null ? app.getCoverLetter() : "-";
-                cell4.setCellValue(coverLetter.length() > 100 ? coverLetter.substring(0, 100) + "..." : coverLetter);
-                cell4.setCellStyle(currentStyle);
+                if (app.getCoverLetterUrl() != null && !app.getCoverLetterUrl().isEmpty()) {
+                    String coverLetterLink = serverBaseUrl + "/api/v1/file/cover-letter/" + app.getCoverLetterUrl() + "/view";
+                    cell4.setCellValue("View Cover Letter");
+                    Hyperlink clHyperlink = workbook.getCreationHelper().createHyperlink(HyperlinkType.URL);
+                    clHyperlink.setAddress(coverLetterLink);
+                    cell4.setHyperlink(clHyperlink);
+                    cell4.setCellStyle(linkStyle);
+                } else {
+                    cell4.setCellValue("No cover letter");
+                    cell4.setCellStyle(currentStyle);
+                }
 
                 // Resume Link (as hyperlink)
                 Cell cell5 = row.createCell(5);

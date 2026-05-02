@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { getAllJobs, applyToJob, getMyApplications, uploadResume, getResumeViewUrl, withdrawApplication, getUser, getLogoViewUrl } from "@/lib/api";
-import { Briefcase, MapPin, DollarSign, Building, X, Send, FileText, Clock, CheckCircle, XCircle, Upload, ExternalLink, Calendar, Award, Loader2, Users, Download, ZoomIn, ZoomOut, Trash2, User, Settings, AlertTriangle, Globe } from "lucide-react";
+import { getAllJobs, applyToJob, getMyApplications, uploadResume, getResumeViewUrl, withdrawApplication, getUser, getLogoViewUrl, uploadCoverLetter, getCoverLetterViewUrl } from "@/lib/api";
+import { Briefcase, MapPin, DollarSign, Building, X, Send, FileText, Clock, CheckCircle, XCircle, Upload, ExternalLink, Calendar, Award, Loader2, Users, Download, Trash2, User, Settings, AlertTriangle, Globe, FileUp } from "lucide-react";
 import ProfileDialog from "@/components/ProfileDialog";
+import PDFViewer from "@/components/PDFViewer";
 
 // Job Type Labels
 const JOB_TYPE_LABELS = {
@@ -27,14 +28,18 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [showJobDetailModal, setShowJobDetailModal] = useState(false);
     const [selectedJob, setSelectedJob] = useState(null);
-    const [coverLetter, setCoverLetter] = useState("");
     const [resumeFile, setResumeFile] = useState(null);
     const [uploadedResumeId, setUploadedResumeId] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [appliedJobIds, setAppliedJobIds] = useState([]);
-    const [showResumeViewer, setShowResumeViewer] = useState(false);
-    const [resumeViewUrl, setResumeViewUrl] = useState("");
-    const [pdfZoom, setPdfZoom] = useState(100);
+    // Cover letter state
+    const [coverLetterFile, setCoverLetterFile] = useState(null);
+    const [uploadedCoverLetterId, setUploadedCoverLetterId] = useState(null);
+    const [uploadingCoverLetter, setUploadingCoverLetter] = useState(false);
+    // PDF Viewer state
+    const [showPDFViewer, setShowPDFViewer] = useState(false);
+    const [pdfViewerUrl, setPdfViewerUrl] = useState("");
+    const [pdfViewerTitle, setPdfViewerTitle] = useState("PDF Viewer");
     const [withdrawing, setWithdrawing] = useState(null);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
@@ -133,21 +138,70 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
         }
     };
 
+    // # Handle Cover Letter Upload (PDF only)
+    const handleCoverLetterUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type (PDF only)
+        if (file.type !== 'application/pdf') {
+            toast.error("Only PDF files are allowed for cover letters");
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("File size must be less than 5MB");
+            return;
+        }
+
+        setCoverLetterFile(file);
+        setUploadingCoverLetter(true);
+
+        try {
+            const response = await uploadCoverLetter(user.id, file);
+            if (response.success) {
+                setUploadedCoverLetterId(response.data._id);
+                toast.success("Cover letter uploaded successfully!");
+            } else {
+                toast.error(response.message || "Failed to upload cover letter");
+                setCoverLetterFile(null);
+            }
+        } catch (error) {
+            toast.error("Failed to upload cover letter");
+            setCoverLetterFile(null);
+        } finally {
+            setUploadingCoverLetter(false);
+        }
+    };
+
     // # Handle Apply
     const handleApply = async (e) => {
         e.preventDefault();
+
+        // Validate required fields
+        if (!uploadedResumeId) {
+            toast.error("Please upload your resume");
+            return;
+        }
+        if (!uploadedCoverLetterId) {
+            toast.error("Please upload your cover letter");
+            return;
+        }
+
         try {
             const response = await applyToJob(user.id, {
                 job_id: selectedJob._id,
-                cover_letter: coverLetter,
+                cover_letter_id: uploadedCoverLetterId,
                 resume_id: uploadedResumeId
             });
             if (response.success) {
                 toast.success("Application submitted successfully!");
                 setShowApplyModal(false);
-                setCoverLetter("");
                 setResumeFile(null);
                 setUploadedResumeId(null);
+                setCoverLetterFile(null);
+                setUploadedCoverLetterId(null);
                 fetchApplications();
                 fetchJobs();
             } else {
@@ -161,10 +215,18 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
     // # Open Apply Modal
     const openApplyModal = (job) => {
         setSelectedJob(job);
-        setCoverLetter("");
         setResumeFile(null);
         setUploadedResumeId(null);
+        setCoverLetterFile(null);
+        setUploadedCoverLetterId(null);
         setShowApplyModal(true);
+    };
+
+    // # Open PDF Viewer (for resume or cover letter)
+    const openPDFViewer = (url, title) => {
+        setPdfViewerUrl(url);
+        setPdfViewerTitle(title);
+        setShowPDFViewer(true);
     };
 
     // # Get Status Badge Color
@@ -216,13 +278,6 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
         } finally {
             setWithdrawing(null);
         }
-    };
-
-    // # Open Resume Viewer
-    const openResumeViewer = (resumeId) => {
-        setResumeViewUrl(getResumeViewUrl(resumeId));
-        setPdfZoom(100);
-        setShowResumeViewer(true);
     };
 
     // # Get Application Count Display (for candidates - focus on remaining spots)
@@ -504,27 +559,32 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                         </div>
                                     </div>
 
-                                    {/* Resume Link */}
-                                    {app.resume_url && (
-                                        <div className="mt-4 pt-4 border-t border-gray-100">
+                                    {/* Documents - Resume and Cover Letter */}
+                                    <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
+                                        {/* Resume Link */}
+                                        {app.resume_url && (
                                             <button
-                                                onClick={() => openResumeViewer(app.resume_url)}
-                                                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
+                                                onClick={() => openPDFViewer(getResumeViewUrl(app.resume_url), "Resume")}
+                                                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded-lg transition-colors"
                                             >
                                                 <FileText className="w-4 h-4 mr-1" />
-                                                View Your Submitted Resume
+                                                View Resume
                                                 <ExternalLink className="w-3 h-3 ml-1" />
                                             </button>
-                                        </div>
-                                    )}
+                                        )}
 
-                                    {app.cover_letter && (
-                                        <div className="mt-4 pt-4 border-t border-gray-100">
-                                            <p className="text-sm text-gray-600">
-                                                <span className="font-medium">Cover Letter:</span> {app.cover_letter}
-                                            </p>
-                                        </div>
-                                    )}
+                                        {/* Cover Letter Link */}
+                                        {app.cover_letter_url && (
+                                            <button
+                                                onClick={() => openPDFViewer(getCoverLetterViewUrl(app.cover_letter_url), "Cover Letter")}
+                                                className="inline-flex items-center text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-2 py-1 rounded-lg transition-colors"
+                                            >
+                                                <FileUp className="w-4 h-4 mr-1" />
+                                                View Cover Letter
+                                                <ExternalLink className="w-3 h-3 ml-1" />
+                                            </button>
+                                        )}
+                                    </div>
 
                                     {/* Rejection Reason */}
                                     {app.status === "REJECTED" && app.rejection_reason && (
@@ -651,18 +711,59 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                 </div>
                             </div>
 
-                            {/* Cover Letter */}
+                            {/* Cover Letter Upload (PDF only) */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Cover Letter (Optional)
+                                    Upload Cover Letter <span className="text-red-500">*</span>
                                 </label>
-                                <textarea
-                                    rows={5}
-                                    value={coverLetter}
-                                    onChange={(e) => setCoverLetter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                    placeholder="Tell the recruiter why you're a great fit for this role..."
-                                />
+                                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-400 transition-colors">
+                                    <div className="space-y-1 text-center">
+                                        {coverLetterFile ? (
+                                            <div className="flex items-center justify-center space-x-2">
+                                                <FileUp className="w-8 h-8 text-purple-500" />
+                                                <div className="text-left">
+                                                    <p className="text-sm font-medium text-gray-900">{coverLetterFile.name}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {(coverLetterFile.size / 1024 / 1024).toFixed(2)} MB
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCoverLetterFile(null);
+                                                        setUploadedCoverLetterId(null);
+                                                    }}
+                                                    className="ml-2 text-red-500 hover:text-red-700"
+                                                >
+                                                    <X className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <FileUp className="mx-auto h-10 w-10 text-gray-400" />
+                                                <div className="flex text-sm text-gray-600">
+                                                    <label className="relative cursor-pointer rounded-md font-medium text-purple-600 hover:text-purple-500">
+                                                        <span>Upload a PDF</span>
+                                                        <input
+                                                            type="file"
+                                                            accept=".pdf"
+                                                            onChange={handleCoverLetterUpload}
+                                                            className="sr-only"
+                                                        />
+                                                    </label>
+                                                    <p className="pl-1">or drag and drop</p>
+                                                </div>
+                                                <p className="text-xs text-gray-500">PDF only, up to 5MB</p>
+                                            </>
+                                        )}
+                                        {uploadingCoverLetter && (
+                                            <div className="flex items-center justify-center space-x-2 mt-2">
+                                                <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                                                <span className="text-sm text-purple-600">Uploading...</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="flex justify-end space-x-3">
@@ -675,8 +776,8 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={!uploadedResumeId || uploading}
-                                    className={`inline-flex items-center px-4 py-2 font-medium rounded-lg transition-colors ${!uploadedResumeId || uploading
+                                    disabled={!uploadedResumeId || !uploadedCoverLetterId || uploading || uploadingCoverLetter}
+                                    className={`inline-flex items-center px-4 py-2 font-medium rounded-lg transition-colors ${!uploadedResumeId || !uploadedCoverLetterId || uploading || uploadingCoverLetter
                                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                         : 'bg-blue-600 text-white hover:bg-blue-700'
                                         }`}
@@ -882,73 +983,13 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                 </div>
             )}
 
-            {/* # Resume Viewer Modal # */}
-            {showResumeViewer && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[70] p-4">
-                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-                            <h3 className="text-lg font-semibold text-gray-900">Resume Viewer</h3>
-                            <div className="flex items-center space-x-1">
-                                <button
-                                    onClick={() => setPdfZoom(Math.max(50, pdfZoom - 25))}
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Zoom Out"
-                                >
-                                    <ZoomOut className="w-5 h-5" />
-                                </button>
-                                <span className="text-sm text-gray-600 min-w-[60px] text-center font-medium">{pdfZoom}%</span>
-                                <button
-                                    onClick={() => setPdfZoom(Math.min(200, pdfZoom + 25))}
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Zoom In"
-                                >
-                                    <ZoomIn className="w-5 h-5" />
-                                </button>
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                                <a
-                                    href={resumeViewUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Open in New Tab"
-                                >
-                                    <ExternalLink className="w-5 h-5" />
-                                </a>
-                                <a
-                                    href={resumeViewUrl.replace('/view', '/download')}
-                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Download"
-                                >
-                                    <Download className="w-5 h-5" />
-                                </a>
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                                <button
-                                    onClick={() => setShowResumeViewer(false)}
-                                    className="p-2 text-gray-600 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors"
-                                    title="Close"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        {/* PDF Content */}
-                        <div className="flex-1 overflow-auto bg-gray-100">
-                            <div
-                                className="min-h-full flex justify-center p-6"
-                                style={{ transform: `scale(${pdfZoom / 100})`, transformOrigin: 'top center' }}
-                            >
-                                <embed
-                                    src={resumeViewUrl + '#toolbar=0&navpanes=0&scrollbar=1'}
-                                    type="application/pdf"
-                                    className="bg-white shadow-xl rounded"
-                                    style={{ width: '850px', height: '1100px' }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* # PDF Viewer (for Resume and Cover Letter) # */}
+            <PDFViewer
+                isOpen={showPDFViewer}
+                onClose={() => setShowPDFViewer(false)}
+                pdfUrl={pdfViewerUrl}
+                title={pdfViewerTitle}
+            />
 
             {/* # Withdraw Confirmation Modal # */}
             {showWithdrawModal && applicationToWithdraw && (
