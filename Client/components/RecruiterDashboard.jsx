@@ -340,7 +340,7 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                 </button>
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 mt-0.5">
-                                Hire top talent
+                                <span className="font-medium text-purple-600">Recruitment Dashboard</span>
                                 {userData?.industry ? ` • ${userData.industry}` : ""}
                                 {userData?.headquarters ? ` • ${userData.headquarters}` : ""}
                             </p>

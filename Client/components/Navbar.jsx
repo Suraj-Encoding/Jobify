@@ -25,6 +25,16 @@ const Navbar = ({ userData }) => {
                             </h1>
                         </div>
 
+                        {/* # Center Tagline # */}
+                        <div className="hidden md:flex items-center">
+                            <span className={`text-sm font-medium px-4 py-1.5 rounded-full ${userData?.role === "RECRUITER"
+                                ? "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200"
+                                : "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200"
+                                }`}>
+                                {userData?.role === "RECRUITER" ? "✨ Hire Top Talent" : "✨ Find Your Dream Job"}
+                            </span>
+                        </div>
+
                         {/* # User Info & Actions # */}
                         <div className="flex items-center space-x-4">
                             {userData && (

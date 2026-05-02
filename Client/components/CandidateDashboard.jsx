@@ -360,7 +360,7 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                 </button>
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 mt-0.5">
-                                Find your dream job
+                                <span className="font-medium text-blue-600">Career Dashboard</span>
                                 {userData?.current_title ? ` • ${userData.current_title}` : ""}
                                 {userData?.location ? ` • ${userData.location}` : ""}
                             </p>
