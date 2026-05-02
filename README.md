@@ -8,10 +8,10 @@ Jobify is a simple, full-stack job portal application built with Java Spring Boo
 ## 🚀 Live Deployments
 
 - 🌐 **Frontend (Vercel)**  
-  👉 https://your-jobify.vercel.app
+  👉 https://usejobify.vercel.app
 
 - ⚙️ **Backend (Render)**  
-  👉 https://your-jobify-api.onrender.com
+  👉 https://jobify-34qa.onrender.com
 
 ---
 
@@ -26,19 +26,13 @@ Jobify is a simple, full-stack job portal application built with Java Spring Boo
 
 ## Key Features
 
-- **Two User Roles:** Recruiter and Candidate
-- **Recruiter Features:**
-  - Post new job openings
-  - View all posted jobs
-  - View applicants for each job
-  - Accept/Reject applications
-- **Candidate Features:**
-  - Browse all available jobs
-  - Apply to jobs with cover letter
-  - Track application status
-- User management via Clerk webhooks
-- MongoDB for reliable data storage
-- Clean, responsive UI with Tailwind CSS
+- Two user roles: Recruiter and Candidate
+- Recruiters can post jobs and manage applications
+- Candidates can browse jobs and apply with cover letters
+- Application status tracking (Pending, Accepted, Rejected)
+- User management and authentication via Clerk
+- MongoDB for reliable storage of users, jobs, and applications
+- Next.js frontend with responsive UI and Clerk integration
 
 ---
 
@@ -55,11 +49,10 @@ Jobify is a simple, full-stack job portal application built with Java Spring Boo
 Prerequisites:
 
 - Java 17+ and Maven 3.6+ installed
-- MongoDB accessible (local or hosted - MongoDB Atlas recommended)
+- MongoDB accessible (local or hosted)
 - Clerk account and API keys (for auth)
-- Node.js 18+ installed (for frontend)
 
-### 1. Clone the repo
+1. Clone the repo
 
 ```bash
 mkdir Jobify
@@ -67,15 +60,17 @@ cd Jobify
 git clone https://github.com/<your-github-username>/Jobify.git .
 ```
 
-### 2. Configure application settings
+2. Configure application settings (local & production)
 
 Before running the app locally or deploying, make sure your runtime configuration is in place:
 
-- **Local development:** copy `Server/.env.example` to `Server/.env` and `Client/.env.example` to `Client/.env`, then open those files and fill in values specific to your environment.
+- Local development: copy `Server/.env.example` to `Server/.env` and `Client/.env.example` to `Client/.env`, then open those files and fill in values specific to your environment. Keep sensitive values out of version control.
 
-- **Production:** configure required settings and secrets in your hosting platform's environment manager (Vercel, Render, etc.).
+- Production: configure required settings and secrets in your hosting platform's environment manager (Vercel, Render, etc.). Ensure callback/webhook URLs (for Clerk and other services) point to your deployed URLs.
 
-### 3. Run the backend
+Use the example files in `Server/.env.example` and `Client/.env.example` as the authoritative list of keys to provide; the README avoids enumerating individual variable names to keep configuration details centralized in the example files.
+
+3. Run the backend
 
 ```bash
 cd Server
@@ -90,113 +85,88 @@ cd Server
 mvn spring-boot:run
 ```
 
-The backend runs on `http://localhost:3001` by default.
-
-### 4. Run the frontend
+4. Frontend: install and run
 
 ```bash
 cd Client
 npm install
+npm run build 
 npm run dev
 ```
 
-The frontend runs on `http://localhost:3000` by default.
+The frontend typically runs on `http://localhost:3000` and the backend on `http://localhost:3001` (configurable).
 
 ---
 
-## API Endpoints
+## Common Endpoints
 
-Base URL: `/api/v1`
-
-### User Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/user/webhook` | Clerk webhook for user events |
-| PUT | `/user/role` | Set user role (RECRUITER/CANDIDATE) |
-| GET | `/user` | Get current user details |
-
-### Job Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/job` | Create a new job (Recruiter) |
-| GET | `/job/list` | Get all jobs |
-| GET | `/job/my-jobs` | Get jobs by recruiter |
-| GET | `/job/{jobId}` | Get job by ID |
-| DELETE | `/job/{jobId}` | Delete a job (Recruiter) |
-
-### Application Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/application` | Apply to a job (Candidate) |
-| GET | `/application/job/{jobId}` | Get applications for a job (Recruiter) |
-| GET | `/application/my-applications` | Get my applications (Candidate) |
-| PUT | `/application/{id}/status?status=X` | Update application status (Recruiter) |
-
-### Headers
-- `clerk-user-id`: Required for authenticated endpoints
+- API base: `/api/v1`
+  - User webhook: `POST /api/v1/user/webhook` (Clerk)
+  - Set user role: `PUT /api/v1/user/role`
+  - Jobs CRUD: under `/api/v1/job`
+  - Applications: under `/api/v1/application`
 
 ---
 
-## Clerk Webhook Setup
+## Testing & Development Tips
 
-1. Go to your Clerk Dashboard
-2. Navigate to **Webhooks**
-3. Create a new webhook endpoint: `https://your-backend-url/api/v1/user/webhook`
-4. Subscribe to events:
-   - `user.created`
-   - `user.deleted`
+- Use `curl -v http://localhost:3001/api/v1/job/list` to test job listing.
+- Run `mvn compile` to check for backend compile errors.
+- Ensure Clerk webhooks point to the server's `/api/v1/user/webhook` during integration.
 
 ---
 
 ## Deployment
 
-### Vercel (Frontend)
+Below are quick deployment flows for the frontend (Vercel) and backend (Render). These are minimal steps — adapt them for your environment and secrets manager.
 
-1. Create a Vercel project and connect it to this repository
-2. Set the Project Root to `Client`
-3. Build command: `npm run build`
-4. Configure environment variables in Vercel Dashboard
-5. Deploy
+- Vercel (Frontend)
 
-### Render (Backend)
+  1. Create a Vercel project and connect it to this repository.
+  2. Set the Project Root to `Client` (or import as a monorepo and point the app to `Client`).
+  3. Build command: `npm run build`
+  4. Output directory: leave default (Next.js handled by Vercel).
+  5. Configure required settings and secrets in Vercel (Dashboard → Settings → Environment Variables).
+  6. Deploy — Vercel will run builds on every push.
 
-1. Create a new Web Service on Render
-2. Set the root directory to `Server`
-3. Build command: `mvn clean package -DskipTests`
-4. Start command: `java -jar target/jobify-1.0.0.jar`
-5. Configure environment variables
-6. Deploy
+- Render (Backend)
 
----
+  1. Create a new Web Service on Render and connect it to the repository.
+  2. Set the root directory to `Server`.
+  3. Environment & Build:
+     - Build command: `mvn clean package -DskipTests`
+     - Start command: `java -jar target/jobify-1.0.0.jar`
+  4. Configure required settings and secrets in Render (Service settings → Environment).
+  5. Deploy — Render will build and start the service; check logs for startup errors.
 
-## Development Tips
+Tips:
 
-- Test the API using tools like Postman or cURL
-- Ensure Clerk webhooks point to your server's `/api/v1/user/webhook` endpoint
-- Check MongoDB connection string is correct
-- Run `mvn clean compile` to check for backend compile errors
+- Use Vercel for the Next.js frontend (serverless/edge-optimized) and Render (or similar) for the Java backend.
+- Keep production secrets in the platform's environment manager — never commit them.
+- If using webhooks (Clerk), configure callback URLs in Clerk to point to your deployed `POST /api/v1/user/webhook` endpoint.
 
 ---
 
 ## Contributing
 
-Contributions welcome — open issues or submit PRs:
+Contributions welcome — open issues or submit PRs. Follow these steps:
 
 1. Fork the repo
 2. Create a feature branch
-3. Make changes and test locally
+3. Make changes and test locally:
+   - Backend: `cd Server && mvn compile`
+   - Frontend: `cd Client && npm run dev`
 4. Open a PR with a clear description
 
 ---
 
 ## License
 
-This project uses the MIT License. Feel free to adapt as needed.
+This project uses the license in the repository. Feel free to adapt as needed.
 
 ---
 
 ## Acknowledgments
-
-Built with ❤️ for learning purposes. This is a beginner-friendly project to understand full-stack development with Spring Boot and Next.js.
+Enjoy Jobify — deployment and CI-CD guidance have been added above. Open an issue or PR if you want badges, examples, or more detailed deployment templates.
 
 ---
