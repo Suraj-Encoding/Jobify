@@ -170,22 +170,6 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
         }
     };
 
-    // # Calculate Profile Completion #
-    const calculateCompletion = () => {
-        if (isCandidate) {
-            const fields = ['phone', 'location', 'bio', 'skills', 'experience_level', 'current_title', 'education_degree', 'education_college'];
-            const filled = fields.filter(f => formData[f] && formData[f].trim() !== "").length;
-            return Math.round((filled / fields.length) * 100);
-        } else if (isRecruiter) {
-            const fields = ['company_name', 'company_website', 'company_email', 'company_phone', 'industry', 'company_size', 'headquarters', 'company_description'];
-            const filled = fields.filter(f => formData[f] && formData[f].trim() !== "").length;
-            return Math.round((filled / fields.length) * 100);
-        }
-        return 0;
-    };
-
-    const completion = calculateCompletion();
-
     if (!isOpen) return null;
 
     return (
@@ -213,24 +197,67 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                     </button>
                 </div>
 
-                {/* Progress Bar */}
+                {/* Progress Bar - Using backend calculated value */}
                 <div className="px-4 py-3 border-b dark:border-gray-700">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profile Completion</span>
-                        <span className={`text-sm font-bold ${completion < 50 ? 'text-red-500' : completion < 80 ? 'text-yellow-500' : 'text-green-500'}`}>
-                            {completion}%
+                        <span className={`text-sm font-bold ${(userData?.profile_completion ?? 0) < 50 ? 'text-red-500' : (userData?.profile_completion ?? 0) < 80 ? 'text-yellow-500' : 'text-green-500'}`}>
+                            {userData?.profile_completion ?? 0}%
                         </span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
-                            className={`h-2 rounded-full transition-all duration-300 ${completion < 50 ? 'bg-red-500' : completion < 80 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                            style={{ width: `${completion}%` }}
+                            className={`h-2 rounded-full transition-all duration-300 ${(userData?.profile_completion ?? 0) < 50 ? 'bg-red-500' : (userData?.profile_completion ?? 0) < 80 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                            style={{ width: `${userData?.profile_completion ?? 0}%` }}
                         />
                     </div>
+                    {(userData?.profile_completion ?? 0) < 80 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Complete at least 80% to {isRecruiter ? 'post jobs' : 'apply for jobs'}
+                        </p>
+                    )}
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {/* Account Info - Read Only */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <User className="w-4 h-4" /> Account Information
+                            <span className="text-xs font-normal text-gray-400">(Read-only)</span>
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
+                                <input
+                                    type="text"
+                                    value={userData?.first_name || "—"}
+                                    disabled
+                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
+                                <input
+                                    type="text"
+                                    value={userData?.last_name || "—"}
+                                    disabled
+                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={userData?.email || "—"}
+                                    disabled
+                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Recruiter/Company Fields */}
                     {isRecruiter && (
                         <>
@@ -611,7 +638,7 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
 
                 {/* Footer */}
                 <div className="flex items-center justify-between gap-3 p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                    {completion < 80 && (
+                    {(userData?.profile_completion ?? 0) < 80 && (
                         <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400">
                             <AlertCircle className="w-4 h-4" />
                             <span>Complete at least 80% for better visibility</span>
