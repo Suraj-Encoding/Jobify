@@ -137,9 +137,58 @@ export const getMyApplications = async (clerkUserId) => {
 };
 
 // # Update Application Status #
-export const updateApplicationStatus = async (clerkUserId, applicationId, status) => {
-    return await apiRequest(`/application/${applicationId}/status?status=${status}`, {
+export const updateApplicationStatus = async (clerkUserId, applicationId, status, reason = null) => {
+    let url = `/application/${applicationId}/status?status=${status}`;
+    if (reason) {
+        url += `&reason=${encodeURIComponent(reason)}`;
+    }
+    return await apiRequest(url, {
         method: "PUT",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+    });
+};
+
+// # Export Applications to Excel #
+export const exportApplicationsToExcel = async (clerkUserId, jobId) => {
+    const url = `${API_BASE_URL}${API_VERSION}/application/job/${jobId}/export`;
+    const response = await fetch(url, {
+        method: "GET",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+    });
+    return response.blob();
+};
+
+// ## File API ##
+
+// # Upload Resume #
+export const uploadResume = async (clerkUserId, file) => {
+    const url = `${API_BASE_URL}${API_VERSION}/file/resume`;
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+        body: formData,
+    });
+    return response.json();
+};
+
+// # Get Resume View URL #
+export const getResumeViewUrl = (resumeId) => {
+    return `${API_BASE_URL}${API_VERSION}/file/resume/${resumeId}/view`;
+};
+
+// # Delete Resume #
+export const deleteResume = async (clerkUserId) => {
+    return await apiRequest("/file/resume", {
+        method: "DELETE",
         headers: {
             "clerk-user-id": clerkUserId,
         },

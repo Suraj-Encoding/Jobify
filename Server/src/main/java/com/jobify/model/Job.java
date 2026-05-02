@@ -65,6 +65,36 @@ public class Job {
     @JsonProperty("company")
     private String company;
 
+    // Job type: FULL_TIME, PART_TIME, INTERNSHIP, CONTRACT, REMOTE
+    @Field("type")
+    @JsonProperty("type")
+    private String type;
+
+    // Experience required (e.g., "2-4 years", "Fresher", "5+ years")
+    @Field("experience")
+    @JsonProperty("experience")
+    private String experience;
+
+    // Required skills (comma-separated or list)
+    @Field("skills")
+    @JsonProperty("skills")
+    private String skills;
+
+    // Detailed requirements
+    @Field("requirements")
+    @JsonProperty("requirements")
+    private String requirements;
+
+    // Benefits offered
+    @Field("benefits")
+    @JsonProperty("benefits")
+    private String benefits;
+
+    // Application deadline
+    @Field("deadline")
+    @JsonProperty("deadline")
+    private String deadline;
+
     // Number of applications received
     @Field("application_count")
     @JsonProperty("application_count")

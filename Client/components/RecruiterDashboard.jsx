@@ -3,8 +3,28 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { getMyJobs, createJob, deleteJob, getApplicationsByJob, updateApplicationStatus } from "@/lib/api";
-import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock } from "lucide-react";
+import { getMyJobs, createJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl } from "@/lib/api";
+import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink } from "lucide-react";
+
+// Job Type Options
+const JOB_TYPES = [
+    { value: "FULL_TIME", label: "Full Time" },
+    { value: "PART_TIME", label: "Part Time" },
+    { value: "INTERNSHIP", label: "Internship" },
+    { value: "CONTRACT", label: "Contract" },
+    { value: "REMOTE", label: "Remote" },
+    { value: "FREELANCE", label: "Freelance" }
+];
+
+// Experience Options
+const EXPERIENCE_LEVELS = [
+    { value: "Fresher", label: "Fresher (0-1 years)" },
+    { value: "1-3 years", label: "1-3 years" },
+    { value: "3-5 years", label: "3-5 years" },
+    { value: "5-7 years", label: "5-7 years" },
+    { value: "7+ years", label: "7+ years" },
+    { value: "10+ years", label: "10+ years" }
+];
 
 // # 'Recruiter Dashboard' Component #
 const RecruiterDashboard = ({ userData }) => {
@@ -13,14 +33,23 @@ const RecruiterDashboard = ({ userData }) => {
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showApplicationsModal, setShowApplicationsModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedJob, setSelectedJob] = useState(null);
+    const [selectedApplication, setSelectedApplication] = useState(null);
     const [applications, setApplications] = useState([]);
+    const [rejectionReason, setRejectionReason] = useState("");
     const [formData, setFormData] = useState({
         title: "",
         description: "",
         location: "",
         salary: "",
-        company: ""
+        company: "",
+        type: "FULL_TIME",
+        experience: "",
+        skills: "",
+        requirements: "",
+        benefits: "",
+        deadline: ""
     });
 
     // # Fetch Jobs
@@ -50,7 +79,10 @@ const RecruiterDashboard = ({ userData }) => {
             if (response.success) {
                 toast.success("Job created successfully!");
                 setShowCreateModal(false);
-                setFormData({ title: "", description: "", location: "", salary: "", company: "" });
+                setFormData({
+                    title: "", description: "", location: "", salary: "", company: "",
+                    type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: ""
+                });
                 fetchJobs();
             } else {
                 toast.error(response.message || "Failed to create job");
@@ -80,7 +112,7 @@ const RecruiterDashboard = ({ userData }) => {
     const handleViewApplications = async (job) => {
         setSelectedJob(job);
         try {
-            const response = await getApplicationsByJob(user.id, job.id);
+            const response = await getApplicationsByJob(user.id, job._id);
             if (response.success) {
                 setApplications(response.data || []);
                 setShowApplicationsModal(true);
@@ -91,17 +123,52 @@ const RecruiterDashboard = ({ userData }) => {
     };
 
     // # Handle Update Application Status
-    const handleUpdateStatus = async (applicationId, status) => {
+    const handleUpdateStatus = async (applicationId, status, reason = null) => {
         try {
-            const response = await updateApplicationStatus(user.id, applicationId, status);
+            const response = await updateApplicationStatus(user.id, applicationId, status, reason);
             if (response.success) {
                 toast.success("Status updated successfully!");
                 handleViewApplications(selectedJob);
+                setShowRejectModal(false);
+                setRejectionReason("");
+                setSelectedApplication(null);
             } else {
                 toast.error(response.message || "Failed to update status");
             }
         } catch (error) {
             toast.error("An error occurred. Please try again.");
+        }
+    };
+
+    // # Handle Reject with Reason
+    const openRejectModal = (app) => {
+        setSelectedApplication(app);
+        setRejectionReason("");
+        setShowRejectModal(true);
+    };
+
+    // # Handle Export to Excel
+    const handleExportExcel = async () => {
+        try {
+            const blob = await exportApplicationsToExcel(user.id, selectedJob._id);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `candidates_${selectedJob.title.replace(/[^a-zA-Z0-9]/g, "_")}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            toast.success("Excel exported successfully!");
+        } catch (error) {
+            toast.error("Failed to export Excel");
+        }
+    };
+
+    // # View Resume
+    const handleViewResume = (resumeUrl) => {
+        if (resumeUrl) {
+            window.open(getResumeViewUrl(resumeUrl), "_blank");
         }
     };
 
@@ -158,7 +225,14 @@ const RecruiterDashboard = ({ userData }) => {
                         {jobs.map((job) => (
                             <div key={job._id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                                 <div className="flex items-start justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{job.title}</h3>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{job.title}</h3>
+                                        {job.type && (
+                                            <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
+                                                {JOB_TYPES.find(t => t.value === job.type)?.label || job.type}
+                                            </span>
+                                        )}
+                                    </div>
                                     <button
                                         onClick={() => handleDeleteJob(job._id)}
                                         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -167,7 +241,8 @@ const RecruiterDashboard = ({ userData }) => {
                                     </button>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-2">{job.company}</p>
-                                <p className="text-sm text-gray-500 mb-4">{job.location}</p>
+                                <p className="text-sm text-gray-500 mb-2">{job.location}</p>
+                                {job.salary && <p className="text-sm text-green-600 font-medium mb-2">{job.salary}</p>}
                                 <p className="text-sm text-gray-600 line-clamp-2 mb-4">{job.description}</p>
                                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                                     <div className="flex items-center text-sm text-gray-500">
@@ -191,7 +266,7 @@ const RecruiterDashboard = ({ userData }) => {
             {/* # Create Job Modal # */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-semibold text-gray-900">Post New Job</h3>
                             <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
@@ -199,60 +274,139 @@ const RecruiterDashboard = ({ userData }) => {
                             </button>
                         </div>
                         <form onSubmit={handleCreateJob} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="e.g. Frontend Developer"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.company}
+                                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="e.g. Tech Corp"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Type *</label>
+                                    <select
+                                        required
+                                        value={formData.type}
+                                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    >
+                                        {JOB_TYPES.map((type) => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                                    <select
+                                        value={formData.experience}
+                                        onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    >
+                                        <option value="">Select experience</option>
+                                        {EXPERIENCE_LEVELS.map((exp) => (
+                                            <option key={exp.value} value={exp.value}>{exp.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.location}
+                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="e.g. New York, NY or Remote"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary Range</label>
+                                    <input
+                                        type="text"
+                                        value={formData.salary}
+                                        onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="e.g. $80,000 - $100,000"
+                                    />
+                                </div>
+                            </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Required Skills</label>
                                 <input
                                     type="text"
-                                    required
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    value={formData.skills}
+                                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                    placeholder="e.g. Frontend Developer"
+                                    placeholder="e.g. React, Node.js, MongoDB, TypeScript"
                                 />
                             </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.company}
-                                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                    placeholder="e.g. Tech Corp"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.location}
-                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                    placeholder="e.g. New York, NY or Remote"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
-                                <input
-                                    type="text"
-                                    value={formData.salary}
-                                    onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                    placeholder="e.g. $80,000 - $100,000"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Job Description *</label>
                                 <textarea
                                     required
-                                    rows={4}
+                                    rows={3}
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                                    placeholder="Describe the job role, responsibilities, and requirements..."
+                                    placeholder="Brief description of the job role..."
                                 />
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                                <textarea
+                                    rows={3}
+                                    value={formData.requirements}
+                                    onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                    placeholder="Detailed requirements and qualifications..."
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Benefits</label>
+                                <textarea
+                                    rows={2}
+                                    value={formData.benefits}
+                                    onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                    placeholder="e.g. Health insurance, 401k, Remote work, Flexible hours..."
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
+                                <input
+                                    type="date"
+                                    value={formData.deadline}
+                                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                />
+                            </div>
+
                             <div className="flex justify-end space-x-3 pt-4">
                                 <button
                                     type="button"
@@ -276,15 +430,26 @@ const RecruiterDashboard = ({ userData }) => {
             {/* # Applications Modal # */}
             {showApplicationsModal && selectedJob && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h3 className="text-xl font-semibold text-gray-900">Applications</h3>
                                 <p className="text-sm text-gray-600">{selectedJob.title}</p>
                             </div>
-                            <button onClick={() => setShowApplicationsModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <X className="w-6 h-6" />
-                            </button>
+                            <div className="flex items-center space-x-2">
+                                {applications.length > 0 && (
+                                    <button
+                                        onClick={handleExportExcel}
+                                        className="inline-flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    >
+                                        <Download className="w-4 h-4 mr-1" />
+                                        Export Excel
+                                    </button>
+                                )}
+                                <button onClick={() => setShowApplicationsModal(false)} className="text-gray-400 hover:text-gray-600">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
                         </div>
 
                         {applications.length === 0 ? (
@@ -295,38 +460,61 @@ const RecruiterDashboard = ({ userData }) => {
                         ) : (
                             <div className="space-y-4">
                                 {applications.map((app) => (
-                                    <div key={app.id} className="border border-gray-200 rounded-lg p-4">
+                                    <div key={app._id} className="border border-gray-200 rounded-lg p-4">
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
                                                 <h4 className="font-medium text-gray-900">
-                                                    {app.candidate?.firstName} {app.candidate?.lastName}
+                                                    {app.candidate_name || (app.candidate?.firstName + " " + app.candidate?.lastName)}
                                                 </h4>
-                                                <p className="text-sm text-gray-600">{app.candidate?.email}</p>
+                                                <p className="text-sm text-gray-600">{app.candidate_email || app.candidate?.email}</p>
                                             </div>
                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(app.status)}`}>
                                                 {app.status}
                                             </span>
                                         </div>
-                                        {app.coverLetter && (
+
+                                        {/* Resume Link */}
+                                        {app.resume_url && (
+                                            <div className="mb-3">
+                                                <button
+                                                    onClick={() => handleViewResume(app.resume_url)}
+                                                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
+                                                >
+                                                    <FileText className="w-4 h-4 mr-1" />
+                                                    View Resume
+                                                    <ExternalLink className="w-3 h-3 ml-1" />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {app.cover_letter && (
                                             <p className="text-sm text-gray-600 mb-3 bg-gray-50 p-3 rounded-lg">
-                                                {app.coverLetter}
+                                                <span className="font-medium">Cover Letter: </span>{app.cover_letter}
                                             </p>
                                         )}
-                                        <div className="flex space-x-2">
+
+                                        {/* Rejection Reason */}
+                                        {app.status === "REJECTED" && app.rejection_reason && (
+                                            <p className="text-sm text-red-600 mb-3 bg-red-50 p-3 rounded-lg">
+                                                <span className="font-medium">Rejection Reason: </span>{app.rejection_reason}
+                                            </p>
+                                        )}
+
+                                        <div className="flex flex-wrap gap-2">
                                             <button
-                                                onClick={() => handleUpdateStatus(app.id, "REVIEWED")}
+                                                onClick={() => handleUpdateStatus(app._id, "REVIEWED")}
                                                 className="inline-flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                                             >
                                                 <Clock className="w-4 h-4 mr-1" /> Review
                                             </button>
                                             <button
-                                                onClick={() => handleUpdateStatus(app.id, "ACCEPTED")}
+                                                onClick={() => handleUpdateStatus(app._id, "ACCEPTED")}
                                                 className="inline-flex items-center px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                                             >
                                                 <CheckCircle className="w-4 h-4 mr-1" /> Accept
                                             </button>
                                             <button
-                                                onClick={() => handleUpdateStatus(app.id, "REJECTED")}
+                                                onClick={() => openRejectModal(app)}
                                                 className="inline-flex items-center px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
                                             >
                                                 <XCircle className="w-4 h-4 mr-1" /> Reject
@@ -336,6 +524,47 @@ const RecruiterDashboard = ({ userData }) => {
                                 ))}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* # Rejection Modal # */}
+            {showRejectModal && selectedApplication && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white rounded-xl max-w-md w-full p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Reject Application</h3>
+                            <button onClick={() => setShowRejectModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">
+                            You are rejecting the application from <strong>{selectedApplication.candidate_name || (selectedApplication.candidate?.firstName + " " + selectedApplication.candidate?.lastName)}</strong>.
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Rejection Reason (Optional)</label>
+                            <textarea
+                                rows={3}
+                                value={rejectionReason}
+                                onChange={(e) => setRejectionReason(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                                placeholder="Provide a reason for the candidate..."
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleUpdateStatus(selectedApplication._id, "REJECTED", rejectionReason)}
+                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                Confirm Reject
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

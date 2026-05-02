@@ -55,6 +55,31 @@ public class Application {
     @JsonProperty("cover_letter")
     private String coverLetter;
 
+    // Resume URL (uploaded file)
+    @Field("resume_url")
+    @JsonProperty("resume_url")
+    private String resumeUrl;
+
+    // Resume filename
+    @Field("resume_filename")
+    @JsonProperty("resume_filename")
+    private String resumeFilename;
+
+    // Rejection reason (if rejected)
+    @Field("rejection_reason")
+    @JsonProperty("rejection_reason")
+    private String rejectionReason;
+
+    // Candidate name (cached for easy access)
+    @Field("candidate_name")
+    @JsonProperty("candidate_name")
+    private String candidateName;
+
+    // Candidate email (cached for easy access)
+    @Field("candidate_email")
+    @JsonProperty("candidate_email")
+    private String candidateEmail;
+
     // Timestamp when application was submitted
     @Field("created_at")
     @JsonProperty("created_at")

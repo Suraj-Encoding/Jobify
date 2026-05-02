@@ -64,6 +64,9 @@ public class ApplicationService {
                 .clerkUserId(clerkUserId)
                 .status("PENDING")
                 .coverLetter(applicationData.getCoverLetter())
+                .resumeUrl(applicationData.getResumeId())
+                .candidateName(candidate.getFirstName() + " " + candidate.getLastName())
+                .candidateEmail(candidate.getEmail())
                 .createdAt(now)
                 .build();
 
@@ -156,5 +159,48 @@ public class ApplicationService {
         log.info("Application status updated successfully");
 
         return "Application status updated successfully!";
+    }
+
+    /**
+     * Update application status with rejection reason (for recruiter)
+     */
+    public String updateApplicationStatusWithReason(String clerkUserId, String applicationId, String status, String rejectionReason) {
+        log.info("Updating application {} status to {} with reason", applicationId, status);
+
+        // Validate status
+        if (!status.equals("PENDING") && !status.equals("REVIEWED") && 
+            !status.equals("ACCEPTED") && !status.equals("REJECTED")) {
+            throw new AppException("Invalid status", HttpStatus.BAD_REQUEST);
+        }
+
+        // Get application
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new AppException("Application not found", HttpStatus.NOT_FOUND));
+
+        // Verify the job belongs to this recruiter
+        Job job = jobService.getJobById(application.getJobId());
+        if (!job.getClerkUserId().equals(clerkUserId)) {
+            throw new AppException("You can only update applications for your own jobs", HttpStatus.FORBIDDEN);
+        }
+
+        // Update status and rejection reason
+        application.setStatus(status);
+        if ("REJECTED".equals(status) && rejectionReason != null) {
+            application.setRejectionReason(rejectionReason);
+        }
+        application.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
+        applicationRepository.save(application);
+
+        log.info("Application status updated successfully");
+
+        return "Application status updated successfully!";
+    }
+
+    /**
+     * Get application by ID
+     */
+    public Application getApplicationById(String applicationId) {
+        return applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new AppException("Application not found", HttpStatus.NOT_FOUND));
     }
 }

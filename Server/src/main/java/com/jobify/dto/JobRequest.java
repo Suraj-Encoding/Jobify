@@ -47,5 +47,29 @@ public class JobRequest {
         // Company name (required)
         @JsonProperty("company")
         private String company;
+
+        // Job type: FULL_TIME, PART_TIME, INTERNSHIP, CONTRACT, REMOTE
+        @JsonProperty("type")
+        private String type;
+
+        // Experience required
+        @JsonProperty("experience")
+        private String experience;
+
+        // Required skills
+        @JsonProperty("skills")
+        private String skills;
+
+        // Detailed requirements
+        @JsonProperty("requirements")
+        private String requirements;
+
+        // Benefits offered
+        @JsonProperty("benefits")
+        private String benefits;
+
+        // Application deadline
+        @JsonProperty("deadline")
+        private String deadline;
     }
 }

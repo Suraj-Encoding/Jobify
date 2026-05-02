@@ -35,5 +35,9 @@ public class ApplicationRequest {
         // Cover letter or note (optional)
         @JsonProperty("cover_letter")
         private String coverLetter;
+
+        // Resume ID (from uploaded resume)
+        @JsonProperty("resume_id")
+        private String resumeId;
     }
 }

@@ -3,13 +3,21 @@ package com.jobify.controller;
 import com.jobify.dto.ApiResponse;
 import com.jobify.dto.ApplicationRequest;
 import com.jobify.model.Application;
+import com.jobify.model.Job;
 import com.jobify.service.ApplicationService;
+import com.jobify.service.ExcelService;
+import com.jobify.service.JobService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Application Controller - Handles job application API endpoints
@@ -22,6 +30,11 @@ import java.util.List;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
+    private final ExcelService excelService;
+    private final JobService jobService;
+
+    @Value("${app.server.uri:http://localhost:3001}")
+    private String serverBaseUrl;
 
     /**
      * Apply to Job - Submit an application (Candidate only)
@@ -74,9 +87,47 @@ public class ApplicationController {
     public ResponseEntity<ApiResponse<Void>> updateApplicationStatus(
             @RequestHeader("clerk-user-id") String clerkUserId,
             @PathVariable String applicationId,
-            @RequestParam String status) {
+            @RequestParam String status,
+            @RequestParam(required = false) String reason) {
         
-        String result = applicationService.updateApplicationStatus(clerkUserId, applicationId, status);
+        String result;
+        if (reason != null && !reason.isEmpty()) {
+            result = applicationService.updateApplicationStatusWithReason(clerkUserId, applicationId, status, reason);
+        } else {
+            result = applicationService.updateApplicationStatus(clerkUserId, applicationId, status);
+        }
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /**
+     * Export Applications to Excel - Download candidates list as Excel file
+     * GET /api/v1/application/job/{jobId}/export
+     * Header: clerk-user-id
+     */
+    @GetMapping("/job/{jobId}/export")
+    public ResponseEntity<byte[]> exportApplicationsToExcel(
+            @RequestHeader("clerk-user-id") String clerkUserId,
+            @PathVariable String jobId) throws IOException {
+        
+        // Get job details
+        Job job = jobService.getJobById(jobId);
+        
+        // Get applications
+        List<Application> applications = applicationService.getApplicationsByJob(clerkUserId, jobId);
+        
+        // Generate Excel
+        byte[] excelData = excelService.exportApplicationsToExcel(applications, job.getTitle(), serverBaseUrl);
+        
+        // Create filename
+        String filename = "candidates_" + job.getTitle().replaceAll("[^a-zA-Z0-9]", "_") + ".xlsx";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(excelData.length);
+        
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(excelData);
     }
 }

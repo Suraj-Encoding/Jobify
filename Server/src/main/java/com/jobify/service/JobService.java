@@ -65,6 +65,12 @@ public class JobService {
                 .location(jobData.getLocation().trim())
                 .salary(jobData.getSalary() != null ? jobData.getSalary().trim() : null)
                 .company(jobData.getCompany().trim())
+                .type(jobData.getType() != null ? jobData.getType().trim() : "FULL_TIME")
+                .experience(jobData.getExperience() != null ? jobData.getExperience().trim() : null)
+                .skills(jobData.getSkills() != null ? jobData.getSkills().trim() : null)
+                .requirements(jobData.getRequirements() != null ? jobData.getRequirements().trim() : null)
+                .benefits(jobData.getBenefits() != null ? jobData.getBenefits().trim() : null)
+                .deadline(jobData.getDeadline() != null ? jobData.getDeadline().trim() : null)
                 .applicationCount(0)
                 .createdAt(now)
                 .build();
