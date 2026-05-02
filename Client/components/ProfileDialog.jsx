@@ -230,66 +230,23 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                             <span className="text-xs font-normal text-gray-400">(Read-only)</span>
                         </h3>
 
-                        {/* Profile Image */}
+                        {/* Profile Image - Always Clerk User */}
                         <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                            {isRecruiter ? (
-                                // Company Logo for Recruiter
-                                logoPreview ? (
-                                    <img src={logoPreview} alt="Company Logo" className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200" />
-                                ) : (
-                                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center">
-                                        <Building2 className="w-8 h-8 text-white" />
-                                    </div>
-                                )
+                            {clerkUser?.imageUrl ? (
+                                <img src={clerkUser.imageUrl} alt="Profile" className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200" />
                             ) : (
-                                // Clerk Profile Image for Candidate
-                                clerkUser?.imageUrl ? (
-                                    <img src={clerkUser.imageUrl} alt="Profile" className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200" />
-                                ) : (
-                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-                                        {clerkUser?.firstName?.charAt(0)?.toUpperCase() || <User className="w-8 h-8" />}
-                                    </div>
-                                )
+                                <div className={`w-16 h-16 bg-gradient-to-br ${isRecruiter ? "from-purple-500 to-purple-700" : "from-blue-500 to-blue-700"} rounded-xl flex items-center justify-center text-white font-bold text-xl`}>
+                                    {clerkUser?.firstName?.charAt(0)?.toUpperCase() || <User className="w-8 h-8" />}
+                                </div>
                             )}
                             <div>
                                 <p className="font-semibold text-gray-900 dark:text-white">
-                                    {isRecruiter ? (userData?.company_name || "Company Name") : `${clerkUser?.firstName || ""} ${clerkUser?.lastName || ""}`}
+                                    {clerkUser?.firstName || ""} {clerkUser?.lastName || ""}
                                 </p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">{userData?.email}</p>
-                                <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full ${isRecruiter ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
-                                    }`}>
+                                <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full ${isRecruiter ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
                                     {isRecruiter ? "RECRUITER" : "CANDIDATE"}
                                 </span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
-                                <input
-                                    type="text"
-                                    value={userData?.first_name || "—"}
-                                    disabled
-                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
-                                <input
-                                    type="text"
-                                    value={userData?.last_name || "—"}
-                                    disabled
-                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    value={userData?.email || "—"}
-                                    disabled
-                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-                                />
                             </div>
                         </div>
                     </div>
