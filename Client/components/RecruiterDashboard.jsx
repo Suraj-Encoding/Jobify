@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 import { getMyJobs, createJob, updateJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl } from "@/lib/api";
-import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut, Edit2 } from "lucide-react";
+import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut, Edit2, Table2 } from "lucide-react";
 
 // Job Type Options
 const JOB_TYPES = [
@@ -41,6 +41,7 @@ const RecruiterDashboard = ({ userData }) => {
     const [showResumeViewer, setShowResumeViewer] = useState(false);
     const [resumeViewUrl, setResumeViewUrl] = useState("");
     const [pdfZoom, setPdfZoom] = useState(100);
+    const [showExcelPreview, setShowExcelPreview] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [jobToDelete, setJobToDelete] = useState(null);
@@ -537,13 +538,22 @@ const RecruiterDashboard = ({ userData }) => {
                             </div>
                             <div className="flex items-center space-x-2">
                                 {applications.length > 0 && (
-                                    <button
-                                        onClick={handleExportExcel}
-                                        className="inline-flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                    >
-                                        <Download className="w-4 h-4 mr-1" />
-                                        Export Excel
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={() => setShowExcelPreview(true)}
+                                            className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                        >
+                                            <Table2 className="w-4 h-4 mr-1" />
+                                            Preview
+                                        </button>
+                                        <button
+                                            onClick={handleExportExcel}
+                                            className="inline-flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                        >
+                                            <Download className="w-4 h-4 mr-1" />
+                                            Download Excel
+                                        </button>
+                                    </>
                                 )}
                                 <button onClick={() => setShowApplicationsModal(false)} className="text-gray-400 hover:text-gray-600">
                                     <X className="w-6 h-6" />
@@ -670,8 +680,8 @@ const RecruiterDashboard = ({ userData }) => {
 
             {/* # Resume Viewer Modal # */}
             {showResumeViewer && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[70] p-4">
-                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[70] p-4">
+                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                             <h3 className="text-lg font-semibold text-gray-900">Resume Viewer</h3>
@@ -730,6 +740,128 @@ const RecruiterDashboard = ({ userData }) => {
                                     className="bg-white shadow-xl rounded"
                                     style={{ width: '850px', height: '1100px' }}
                                 />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* # Excel Preview Modal # */}
+            {showExcelPreview && selectedJob && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[70] p-4">
+                    <div className="bg-white rounded-xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
+                            <div>
+                                <h3 className="text-lg font-semibold text-white">Excel Preview</h3>
+                                <p className="text-sm text-blue-100">Candidates for: {selectedJob.title}</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={handleExportExcel}
+                                    className="inline-flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                                >
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Download Excel
+                                </button>
+                                <button
+                                    onClick={() => setShowExcelPreview(false)}
+                                    className="p-2 text-white hover:bg-blue-800 rounded-lg transition-colors"
+                                    title="Close"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Excel Table Content */}
+                        <div className="flex-1 overflow-auto bg-gray-100 p-6">
+                            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                <table className="w-full border-collapse">
+                                    <thead>
+                                        <tr className="bg-gradient-to-r from-blue-700 to-blue-800">
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">#</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Candidate Name</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Email</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Status</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Cover Letter</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Resume</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-blue-600">Applied Date</th>
+                                            <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Rejection Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {applications.map((app, index) => (
+                                            <tr key={app._id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                <td className="px-4 py-3 text-sm text-gray-900 border border-gray-200 font-medium">{index + 1}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-900 border border-gray-200 font-medium">
+                                                    {app.candidate_name || (app.candidate?.firstName + " " + app.candidate?.lastName) || "N/A"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200">
+                                                    {app.candidate_email || app.candidate?.email || "N/A"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm border border-gray-200">
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${app.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
+                                                            app.status === "REVIEWED" ? "bg-blue-100 text-blue-800" :
+                                                                app.status === "ACCEPTED" ? "bg-green-100 text-green-800" :
+                                                                    app.status === "REJECTED" ? "bg-red-100 text-red-800" :
+                                                                        "bg-gray-100 text-gray-800"
+                                                        }`}>
+                                                        {app.status === "PENDING" && "⏳ "}
+                                                        {app.status === "REVIEWED" && "👁 "}
+                                                        {app.status === "ACCEPTED" && "✓ "}
+                                                        {app.status === "REJECTED" && "✗ "}
+                                                        {app.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200 max-w-xs">
+                                                    <p className="truncate" title={app.cover_letter}>
+                                                        {app.cover_letter ? (app.cover_letter.length > 50 ? app.cover_letter.substring(0, 50) + "..." : app.cover_letter) : "-"}
+                                                    </p>
+                                                </td>
+                                                <td className="px-4 py-3 text-sm border border-gray-200">
+                                                    {app.resume_url ? (
+                                                        <button
+                                                            onClick={() => handleViewResume(app.resume_url)}
+                                                            className="text-blue-600 hover:text-blue-800 underline font-medium"
+                                                        >
+                                                            View Resume
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-400">No resume</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                    {app.created_at ? new Date(app.created_at).toLocaleDateString('en-US', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    }) : "-"}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600 border border-gray-200">
+                                                    {app.rejection_reason || "-"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                {applications.length === 0 && (
+                                    <div className="text-center py-12 text-gray-500">
+                                        No applications to display
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Summary */}
+                            <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
+                                <span>Total: {applications.length} candidate(s)</span>
+                                <div className="flex space-x-4">
+                                    <span className="flex items-center"><span className="w-3 h-3 bg-yellow-400 rounded-full mr-1"></span> Pending: {applications.filter(a => a.status === "PENDING").length}</span>
+                                    <span className="flex items-center"><span className="w-3 h-3 bg-blue-400 rounded-full mr-1"></span> Reviewed: {applications.filter(a => a.status === "REVIEWED").length}</span>
+                                    <span className="flex items-center"><span className="w-3 h-3 bg-green-400 rounded-full mr-1"></span> Accepted: {applications.filter(a => a.status === "ACCEPTED").length}</span>
+                                    <span className="flex items-center"><span className="w-3 h-3 bg-red-400 rounded-full mr-1"></span> Rejected: {applications.filter(a => a.status === "REJECTED").length}</span>
+                                </div>
                             </div>
                         </div>
                     </div>

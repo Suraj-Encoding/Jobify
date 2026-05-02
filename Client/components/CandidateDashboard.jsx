@@ -331,10 +331,10 @@ const CandidateDashboard = ({ userData }) => {
                                             onClick={() => openApplyModal(job)}
                                             disabled={appliedJobIds.includes(job._id) || isJobFull(job)}
                                             className={`flex-1 py-2 rounded-lg font-medium transition-colors ${appliedJobIds.includes(job._id)
-                                                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                    : isJobFull(job)
-                                                        ? "bg-red-100 text-red-500 cursor-not-allowed"
-                                                        : "bg-blue-600 text-white hover:bg-blue-700"
+                                                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                                : isJobFull(job)
+                                                    ? "bg-red-100 text-red-500 cursor-not-allowed"
+                                                    : "bg-blue-600 text-white hover:bg-blue-700"
                                                 }`}
                                         >
                                             {appliedJobIds.includes(job._id) ? "Applied" : isJobFull(job) ? "Full" : "Apply"}
@@ -675,10 +675,10 @@ const CandidateDashboard = ({ userData }) => {
                                     }}
                                     disabled={appliedJobIds.includes(selectedJob._id) || isJobFull(selectedJob)}
                                     className={`w-full py-3 rounded-lg font-medium transition-colors ${appliedJobIds.includes(selectedJob._id)
-                                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                                            : isJobFull(selectedJob)
-                                                ? 'bg-red-100 text-red-500 cursor-not-allowed'
-                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                        : isJobFull(selectedJob)
+                                            ? 'bg-red-100 text-red-500 cursor-not-allowed'
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
                                         }`}
                                 >
                                     {appliedJobIds.includes(selectedJob._id) ? 'Already Applied' : isJobFull(selectedJob) ? 'Applications Full' : 'Apply Now'}
@@ -691,38 +691,48 @@ const CandidateDashboard = ({ userData }) => {
 
             {/* # Resume Viewer Modal # */}
             {showResumeViewer && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col">
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[70] p-4">
+                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                             <h3 className="text-lg font-semibold text-gray-900">Resume Viewer</h3>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1">
                                 <button
                                     onClick={() => setPdfZoom(Math.max(50, pdfZoom - 25))}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
                                     title="Zoom Out"
                                 >
                                     <ZoomOut className="w-5 h-5" />
                                 </button>
-                                <span className="text-sm text-gray-600 min-w-[60px] text-center">{pdfZoom}%</span>
+                                <span className="text-sm text-gray-600 min-w-[60px] text-center font-medium">{pdfZoom}%</span>
                                 <button
                                     onClick={() => setPdfZoom(Math.min(200, pdfZoom + 25))}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
                                     title="Zoom In"
                                 >
                                     <ZoomIn className="w-5 h-5" />
                                 </button>
+                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
                                 <a
                                     href={resumeViewUrl}
-                                    download
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                                    title="Open in New Tab"
+                                >
+                                    <ExternalLink className="w-5 h-5" />
+                                </a>
+                                <a
+                                    href={resumeViewUrl.replace('/view', '/download')}
+                                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
                                     title="Download"
                                 >
                                     <Download className="w-5 h-5" />
                                 </a>
+                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
                                 <button
                                     onClick={() => setShowResumeViewer(false)}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    className="p-2 text-gray-600 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors"
                                     title="Close"
                                 >
                                     <X className="w-5 h-5" />
@@ -730,13 +740,16 @@ const CandidateDashboard = ({ userData }) => {
                             </div>
                         </div>
                         {/* PDF Content */}
-                        <div className="flex-1 overflow-auto bg-gray-100 p-4">
-                            <div style={{ transform: `scale(${pdfZoom / 100})`, transformOrigin: 'top center' }}>
-                                <iframe
-                                    src={resumeViewUrl}
-                                    className="w-full bg-white shadow-lg"
-                                    style={{ height: '100vh', minWidth: '800px' }}
-                                    title="Resume"
+                        <div className="flex-1 overflow-auto bg-gray-100">
+                            <div
+                                className="min-h-full flex justify-center p-6"
+                                style={{ transform: `scale(${pdfZoom / 100})`, transformOrigin: 'top center' }}
+                            >
+                                <embed
+                                    src={resumeViewUrl + '#toolbar=0&navpanes=0&scrollbar=1'}
+                                    type="application/pdf"
+                                    className="bg-white shadow-xl rounded"
+                                    style={{ width: '850px', height: '1100px' }}
                                 />
                             </div>
                         </div>
