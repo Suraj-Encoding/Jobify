@@ -1,5 +1,5 @@
 <!-- # "Jobify" Readme File # -->
-# 🕸️ Welcome to Jobify - Find Your Dream Job 🕸️
+# 🕸️ Welcome to Jobify - Modern Job Portal 🕸️
 
 Jobify is a simple, full-stack job portal application built with Java Spring Boot (backend), MongoDB (data store), Clerk (authentication), and Next.js (frontend). It allows recruiters to post jobs and candidates to apply, with a clean and beginner-friendly codebase.
 

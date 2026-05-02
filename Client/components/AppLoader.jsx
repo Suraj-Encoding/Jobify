@@ -37,7 +37,7 @@ const AppLoader = () => {
                     </h1>
 
                     <p className="text-base text-center max-w-xs font-medium leading-snug text-gray-600">
-                        Find Your Dream Job
+                        Modern Job Portal
                     </p>
                 </div>
 
