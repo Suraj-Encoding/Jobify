@@ -57,7 +57,7 @@ const CandidateDashboard = ({ userData }) => {
         e.preventDefault();
         try {
             const response = await applyToJob(user.id, {
-                jobId: selectedJob.id,
+                jobId: selectedJob._id,
                 coverLetter: coverLetter
             });
             if (response.success) {
@@ -118,8 +118,8 @@ const CandidateDashboard = ({ userData }) => {
                     <button
                         onClick={() => setActiveTab("jobs")}
                         className={`pb-3 px-1 font-medium transition-colors ${activeTab === "jobs"
-                                ? "text-blue-600 border-b-2 border-blue-600"
-                                : "text-gray-500 hover:text-gray-700"
+                            ? "text-blue-600 border-b-2 border-blue-600"
+                            : "text-gray-500 hover:text-gray-700"
                             }`}
                     >
                         Browse Jobs
@@ -127,8 +127,8 @@ const CandidateDashboard = ({ userData }) => {
                     <button
                         onClick={() => setActiveTab("applications")}
                         className={`pb-3 px-1 font-medium transition-colors ${activeTab === "applications"
-                                ? "text-blue-600 border-b-2 border-blue-600"
-                                : "text-gray-500 hover:text-gray-700"
+                            ? "text-blue-600 border-b-2 border-blue-600"
+                            : "text-gray-500 hover:text-gray-700"
                             }`}
                     >
                         My Applications ({applications.length})
@@ -151,7 +151,7 @@ const CandidateDashboard = ({ userData }) => {
                     ) : (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {jobs.map((job) => (
-                                <div key={job.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                                <div key={job._id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">{job.title}</h3>
 
                                     <div className="space-y-2 mb-4">
@@ -175,13 +175,13 @@ const CandidateDashboard = ({ userData }) => {
 
                                     <button
                                         onClick={() => openApplyModal(job)}
-                                        disabled={appliedJobIds.includes(job.id)}
-                                        className={`w-full py-2 rounded-lg font-medium transition-colors ${appliedJobIds.includes(job.id)
-                                                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-blue-600 text-white hover:bg-blue-700"
+                                        disabled={appliedJobIds.includes(job._id)}
+                                        className={`w-full py-2 rounded-lg font-medium transition-colors ${appliedJobIds.includes(job._id)
+                                            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                            : "bg-blue-600 text-white hover:bg-blue-700"
                                             }`}
                                     >
-                                        {appliedJobIds.includes(job.id) ? "Already Applied" : "Apply Now"}
+                                        {appliedJobIds.includes(job._id) ? "Already Applied" : "Apply Now"}
                                     </button>
                                 </div>
                             ))}
@@ -204,7 +204,7 @@ const CandidateDashboard = ({ userData }) => {
                     ) : (
                         <div className="space-y-4">
                             {applications.map((app) => (
-                                <div key={app.id} className="bg-white rounded-xl border border-gray-200 p-6">
+                                <div key={app._id} className="bg-white rounded-xl border border-gray-200 p-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                         <div>
                                             <h3 className="text-lg font-semibold text-gray-900">

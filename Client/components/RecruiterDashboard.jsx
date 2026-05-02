@@ -156,11 +156,11 @@ const RecruiterDashboard = ({ userData }) => {
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {jobs.map((job) => (
-                            <div key={job.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                            <div key={job._id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                                 <div className="flex items-start justify-between mb-4">
                                     <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{job.title}</h3>
                                     <button
-                                        onClick={() => handleDeleteJob(job.id)}
+                                        onClick={() => handleDeleteJob(job._id)}
                                         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                                     >
                                         <Trash2 className="w-5 h-5" />
