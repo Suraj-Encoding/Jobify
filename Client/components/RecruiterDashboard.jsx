@@ -329,7 +329,7 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {userData?.company_name || "Recruiter Dashboard"}
+                                    {userData?.company_name || "Company Name"}
                                 </h2>
                                 <button
                                     onClick={() => setShowProfileDialog(true)}
@@ -340,8 +340,9 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                 </button>
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 mt-0.5">
-                                {userData?.industry ? `${userData.industry} • ` : ""}
-                                {userData?.headquarters || "Manage your job postings"}
+                                Hire top talent
+                                {userData?.industry ? ` • ${userData.industry}` : ""}
+                                {userData?.headquarters ? ` • ${userData.headquarters}` : ""}
                             </p>
                         </div>
                     </div>

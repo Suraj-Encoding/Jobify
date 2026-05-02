@@ -338,14 +338,18 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                 {/* # Header # */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
                     <div className="flex items-center gap-4">
-                        {/* Profile Avatar */}
-                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-sm">
-                            <User className="w-7 h-7 text-white" />
-                        </div>
+                        {/* Profile Avatar from Clerk */}
+                        {user?.imageUrl ? (
+                            <img src={user.imageUrl} alt={user?.firstName} className="w-14 h-14 rounded-xl object-cover border-2 border-gray-100 shadow-sm" />
+                        ) : (
+                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-sm text-white font-bold text-xl">
+                                {user?.firstName?.charAt(0)?.toUpperCase() || <User className="w-7 h-7" />}
+                            </div>
+                        )}
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {userData?.current_title || "Candidate Dashboard"}
+                                    {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Welcome"}
                                 </h2>
                                 <button
                                     onClick={() => setShowProfileDialog(true)}
@@ -356,8 +360,9 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                 </button>
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 mt-0.5">
-                                {userData?.location ? `${userData.location} • ` : ""}
-                                {userData?.experience_level || "Browse jobs and track your applications"}
+                                Find your dream job
+                                {userData?.current_title ? ` • ${userData.current_title}` : ""}
+                                {userData?.location ? ` • ${userData.location}` : ""}
                             </p>
                         </div>
                     </div>
