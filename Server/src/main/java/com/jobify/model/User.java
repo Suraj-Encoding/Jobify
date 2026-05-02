@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "users")
+@Document(collection = "user")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
 

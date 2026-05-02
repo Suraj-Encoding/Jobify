@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "resumes")
+@Document(collection = "resume")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Resume {
 

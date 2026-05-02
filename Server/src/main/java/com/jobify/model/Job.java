@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "jobs")
+@Document(collection = "job")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Job {
 

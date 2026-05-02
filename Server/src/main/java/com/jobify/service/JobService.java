@@ -111,7 +111,8 @@ public class JobService {
      */
     public void incrementApplicationCount(String jobId) {
         Job job = getJobById(jobId);
-        job.setApplicationCount(job.getApplicationCount() + 1);
+        int currentCount = job.getApplicationCount() != null ? job.getApplicationCount() : 0;
+        job.setApplicationCount(currentCount + 1);
         job.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
         jobRepository.save(job);
     }
