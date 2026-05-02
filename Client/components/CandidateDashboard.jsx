@@ -192,14 +192,21 @@ const CandidateDashboard = ({ userData }) => {
         setShowResumeViewer(true);
     };
 
-    // # Get Application Count Display
+    // # Get Application Count Display (for candidates - focus on remaining spots)
     const getApplicationCountDisplay = (job) => {
         const current = job.application_count || 0;
         const max = job.max_applications;
         if (max) {
-            return `${current}/${max} applied`;
+            const remaining = max - current;
+            if (remaining <= 0) {
+                return { text: "Applications closed", color: "text-red-600", urgent: false };
+            } else if (remaining <= 3) {
+                return { text: `Only ${remaining} spot${remaining > 1 ? 's' : ''} left!`, color: "text-orange-600", urgent: true };
+            } else {
+                return { text: `${remaining} spots remaining`, color: "text-purple-600", urgent: false };
+            }
         }
-        return `${current} applied`;
+        return { text: `${current} applied`, color: "text-gray-600", urgent: false };
     };
 
     // # Check if Job is Full
@@ -294,10 +301,12 @@ const CandidateDashboard = ({ userData }) => {
                                                 Deadline: {job.deadline}
                                             </div>
                                         )}
-                                        <div className="flex items-center text-sm text-purple-600">
-                                            <Users className="w-4 h-4 mr-2" />
-                                            {getApplicationCountDisplay(job)}
-                                        </div>
+                                        {job.max_applications && (
+                                            <div className={`flex items-center text-sm ${getApplicationCountDisplay(job).color} ${getApplicationCountDisplay(job).urgent ? 'font-semibold' : ''}`}>
+                                                <Users className="w-4 h-4 mr-2" />
+                                                {getApplicationCountDisplay(job).text}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">{job.description}</p>
@@ -659,15 +668,23 @@ const CandidateDashboard = ({ userData }) => {
 
                             {/* Apply Button */}
                             <div className="pt-4 border-t border-gray-200">
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="text-sm text-purple-600 flex items-center">
-                                        <Users className="w-4 h-4 mr-1" />
-                                        {getApplicationCountDisplay(selectedJob)}
-                                    </span>
-                                    {isJobFull(selectedJob) && (
-                                        <span className="text-sm text-red-600 font-medium">Applications closed</span>
-                                    )}
-                                </div>
+                                {selectedJob.max_applications && (
+                                    <div className="mb-3">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className={`text-sm flex items-center ${getApplicationCountDisplay(selectedJob).color} ${getApplicationCountDisplay(selectedJob).urgent ? 'font-semibold' : ''}`}>
+                                                <Users className="w-4 h-4 mr-1" />
+                                                {getApplicationCountDisplay(selectedJob).text}
+                                            </span>
+                                        </div>
+                                        {/* Progress bar */}
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className={`h-2 rounded-full transition-all ${isJobFull(selectedJob) ? 'bg-red-500' : 'bg-blue-500'}`}
+                                                style={{ width: `${Math.min(100, ((selectedJob.application_count || 0) / selectedJob.max_applications) * 100)}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                )}
                                 <button
                                     onClick={() => {
                                         setShowJobDetailModal(false);

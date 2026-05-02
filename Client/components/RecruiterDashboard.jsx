@@ -233,14 +233,19 @@ const RecruiterDashboard = ({ userData }) => {
         }
     };
 
-    // # Get Application Count Display
+    // # Get Application Count Display (for recruiters - focus on filled spots)
     const getApplicationCountDisplay = (job) => {
         const current = job.application_count || 0;
         const max = job.max_applications;
         if (max) {
-            return `${current}/${max} applicants`;
+            const isFull = current >= max;
+            return {
+                text: `${current}/${max} applicants`,
+                color: isFull ? "text-red-600" : "text-gray-500",
+                badge: isFull ? "Full" : null
+            };
         }
-        return `${current} applicants`;
+        return { text: `${current} applicants`, color: "text-gray-500", badge: null };
     };
 
     // # Get Status Badge Color
@@ -332,9 +337,14 @@ const RecruiterDashboard = ({ userData }) => {
                                 {job.salary && <p className="text-sm text-green-600 font-medium mb-2">{job.salary}</p>}
                                 <p className="text-sm text-gray-600 line-clamp-2 mb-4">{job.description}</p>
                                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                    <div className="flex items-center text-sm text-gray-500">
+                                    <div className={`flex items-center text-sm ${getApplicationCountDisplay(job).color}`}>
                                         <Users className="w-4 h-4 mr-1" />
-                                        {getApplicationCountDisplay(job)}
+                                        {getApplicationCountDisplay(job).text}
+                                        {getApplicationCountDisplay(job).badge && (
+                                            <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded font-medium">
+                                                {getApplicationCountDisplay(job).badge}
+                                            </span>
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => handleViewApplications(job)}
@@ -802,10 +812,10 @@ const RecruiterDashboard = ({ userData }) => {
                                                 </td>
                                                 <td className="px-4 py-3 text-sm border border-gray-200">
                                                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${app.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
-                                                            app.status === "REVIEWED" ? "bg-blue-100 text-blue-800" :
-                                                                app.status === "ACCEPTED" ? "bg-green-100 text-green-800" :
-                                                                    app.status === "REJECTED" ? "bg-red-100 text-red-800" :
-                                                                        "bg-gray-100 text-gray-800"
+                                                        app.status === "REVIEWED" ? "bg-blue-100 text-blue-800" :
+                                                            app.status === "ACCEPTED" ? "bg-green-100 text-green-800" :
+                                                                app.status === "REJECTED" ? "bg-red-100 text-red-800" :
+                                                                    "bg-gray-100 text-gray-800"
                                                         }`}>
                                                         {app.status === "PENDING" && "⏳ "}
                                                         {app.status === "REVIEWED" && "👁 "}
