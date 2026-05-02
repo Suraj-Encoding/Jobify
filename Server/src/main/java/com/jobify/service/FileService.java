@@ -54,7 +54,7 @@ public class FileService {
         // Create resume document
         Resume resume = Resume.builder()
                 .clerkUserId(clerkUserId)
-                .filename(file.getOriginalFilename())
+                .fileName(file.getOriginalFilename())
                 .contentType(file.getContentType())
                 .fileSize(file.getSize())
                 .fileData(base64Data)

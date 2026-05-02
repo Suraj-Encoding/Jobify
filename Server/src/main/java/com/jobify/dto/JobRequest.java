@@ -71,5 +71,9 @@ public class JobRequest {
         // Application deadline
         @JsonProperty("deadline")
         private String deadline;
+
+        // Maximum applications allowed
+        @JsonProperty("max_applications")
+        private Integer maxApplications;
     }
 }

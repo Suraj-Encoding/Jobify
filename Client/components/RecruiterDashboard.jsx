@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
 import { getMyJobs, createJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl } from "@/lib/api";
-import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink } from "lucide-react";
+import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, ZoomIn, ZoomOut } from "lucide-react";
 
 // Job Type Options
 const JOB_TYPES = [
@@ -38,6 +38,9 @@ const RecruiterDashboard = ({ userData }) => {
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [applications, setApplications] = useState([]);
     const [rejectionReason, setRejectionReason] = useState("");
+    const [showResumeViewer, setShowResumeViewer] = useState(false);
+    const [resumeViewUrl, setResumeViewUrl] = useState("");
+    const [pdfZoom, setPdfZoom] = useState(100);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -49,7 +52,8 @@ const RecruiterDashboard = ({ userData }) => {
         skills: "",
         requirements: "",
         benefits: "",
-        deadline: ""
+        deadline: "",
+        max_applications: ""
     });
 
     // # Fetch Jobs
@@ -81,7 +85,7 @@ const RecruiterDashboard = ({ userData }) => {
                 setShowCreateModal(false);
                 setFormData({
                     title: "", description: "", location: "", salary: "", company: "",
-                    type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: ""
+                    type: "FULL_TIME", experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
                 });
                 fetchJobs();
             } else {
@@ -168,8 +172,20 @@ const RecruiterDashboard = ({ userData }) => {
     // # View Resume
     const handleViewResume = (resumeUrl) => {
         if (resumeUrl) {
-            window.open(getResumeViewUrl(resumeUrl), "_blank");
+            setResumeViewUrl(getResumeViewUrl(resumeUrl));
+            setPdfZoom(100);
+            setShowResumeViewer(true);
         }
+    };
+
+    // # Get Application Count Display
+    const getApplicationCountDisplay = (job) => {
+        const current = job.application_count || 0;
+        const max = job.max_applications;
+        if (max) {
+            return `${current}/${max} applicants`;
+        }
+        return `${current} applicants`;
     };
 
     // # Get Status Badge Color
@@ -247,7 +263,7 @@ const RecruiterDashboard = ({ userData }) => {
                                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                                     <div className="flex items-center text-sm text-gray-500">
                                         <Users className="w-4 h-4 mr-1" />
-                                        {job.applicationCount || 0} applicants
+                                        {getApplicationCountDisplay(job)}
                                     </div>
                                     <button
                                         onClick={() => handleViewApplications(job)}
@@ -397,14 +413,27 @@ const RecruiterDashboard = ({ userData }) => {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
-                                <input
-                                    type="date"
-                                    value={formData.deadline}
-                                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
+                                    <input
+                                        type="date"
+                                        value={formData.deadline}
+                                        onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Applications</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={formData.max_applications}
+                                        onChange={(e) => setFormData({ ...formData, max_applications: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="Leave empty for unlimited"
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex justify-end space-x-3 pt-4">
@@ -564,6 +593,61 @@ const RecruiterDashboard = ({ userData }) => {
                             >
                                 Confirm Reject
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* # Resume Viewer Modal # */}
+            {showResumeViewer && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[70] p-4">
+                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">Resume Viewer</h3>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={() => setPdfZoom(Math.max(50, pdfZoom - 25))}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Zoom Out"
+                                >
+                                    <ZoomOut className="w-5 h-5" />
+                                </button>
+                                <span className="text-sm text-gray-600 min-w-[60px] text-center">{pdfZoom}%</span>
+                                <button
+                                    onClick={() => setPdfZoom(Math.min(200, pdfZoom + 25))}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Zoom In"
+                                >
+                                    <ZoomIn className="w-5 h-5" />
+                                </button>
+                                <a
+                                    href={resumeViewUrl}
+                                    download
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Download"
+                                >
+                                    <Download className="w-5 h-5" />
+                                </a>
+                                <button
+                                    onClick={() => setShowResumeViewer(false)}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Close"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        {/* PDF Content */}
+                        <div className="flex-1 overflow-auto bg-gray-100 p-4">
+                            <div style={{ transform: `scale(${pdfZoom / 100})`, transformOrigin: 'top center' }}>
+                                <iframe
+                                    src={resumeViewUrl}
+                                    className="w-full bg-white shadow-lg"
+                                    style={{ height: '100vh', minWidth: '800px' }}
+                                    title="Resume"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

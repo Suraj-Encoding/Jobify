@@ -63,7 +63,7 @@ public class FileController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(resume.getContentType()));
-        headers.setContentDispositionFormData("inline", resume.getFilename());
+        headers.setContentDispositionFormData("inline", resume.getFileName());
         headers.setContentLength(data.length);
 
         return ResponseEntity.ok()
@@ -82,7 +82,7 @@ public class FileController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", resume.getFilename());
+        headers.setContentDispositionFormData("attachment", resume.getFileName());
         headers.setContentLength(data.length);
 
         return ResponseEntity.ok()

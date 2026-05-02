@@ -100,6 +100,20 @@ public class ApplicationController {
     }
 
     /**
+     * Withdraw Application - Candidate withdraws their application
+     * DELETE /api/v1/application/{applicationId}
+     * Header: clerk-user-id
+     */
+    @DeleteMapping("/{applicationId}")
+    public ResponseEntity<ApiResponse<Void>> withdrawApplication(
+            @RequestHeader("clerk-user-id") String clerkUserId,
+            @PathVariable String applicationId) {
+        
+        String result = applicationService.withdrawApplication(clerkUserId, applicationId);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /**
      * Export Applications to Excel - Download candidates list as Excel file
      * GET /api/v1/application/job/{jobId}/export
      * Header: clerk-user-id

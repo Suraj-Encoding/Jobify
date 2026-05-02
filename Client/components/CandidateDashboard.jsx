@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
-import { getAllJobs, applyToJob, getMyApplications, uploadResume, getResumeViewUrl } from "@/lib/api";
-import { Briefcase, MapPin, DollarSign, Building, X, Send, FileText, Clock, CheckCircle, XCircle, Upload, ExternalLink, Calendar, Award, Loader2 } from "lucide-react";
+import { getAllJobs, applyToJob, getMyApplications, uploadResume, getResumeViewUrl, withdrawApplication } from "@/lib/api";
+import { Briefcase, MapPin, DollarSign, Building, X, Send, FileText, Clock, CheckCircle, XCircle, Upload, ExternalLink, Calendar, Award, Loader2, Users, Download, ZoomIn, ZoomOut, Trash2 } from "lucide-react";
 
 // Job Type Labels
 const JOB_TYPE_LABELS = {
@@ -31,6 +31,10 @@ const CandidateDashboard = ({ userData }) => {
     const [uploadedResumeId, setUploadedResumeId] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [appliedJobIds, setAppliedJobIds] = useState([]);
+    const [showResumeViewer, setShowResumeViewer] = useState(false);
+    const [resumeViewUrl, setResumeViewUrl] = useState("");
+    const [pdfZoom, setPdfZoom] = useState(100);
+    const [withdrawing, setWithdrawing] = useState(null);
 
     // # Fetch Jobs
     const fetchJobs = async () => {
@@ -160,6 +164,51 @@ const CandidateDashboard = ({ userData }) => {
         }
     };
 
+    // # Handle Withdraw Application
+    const handleWithdraw = async (applicationId) => {
+        if (!confirm("Are you sure you want to withdraw this application?")) return;
+
+        setWithdrawing(applicationId);
+        try {
+            const response = await withdrawApplication(user.id, applicationId);
+            if (response.success) {
+                toast.success("Application withdrawn successfully!");
+                fetchApplications();
+                fetchJobs();
+            } else {
+                toast.error(response.message || "Failed to withdraw application");
+            }
+        } catch (error) {
+            toast.error("An error occurred. Please try again.");
+        } finally {
+            setWithdrawing(null);
+        }
+    };
+
+    // # Open Resume Viewer
+    const openResumeViewer = (resumeId) => {
+        setResumeViewUrl(getResumeViewUrl(resumeId));
+        setPdfZoom(100);
+        setShowResumeViewer(true);
+    };
+
+    // # Get Application Count Display
+    const getApplicationCountDisplay = (job) => {
+        const current = job.application_count || 0;
+        const max = job.max_applications;
+        if (max) {
+            return `${current}/${max} applied`;
+        }
+        return `${current} applied`;
+    };
+
+    // # Check if Job is Full
+    const isJobFull = (job) => {
+        if (!job.max_applications) return false;
+        const current = job.application_count || 0;
+        return current >= job.max_applications;
+    };
+
     return (
         <>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -245,6 +294,10 @@ const CandidateDashboard = ({ userData }) => {
                                                 Deadline: {job.deadline}
                                             </div>
                                         )}
+                                        <div className="flex items-center text-sm text-purple-600">
+                                            <Users className="w-4 h-4 mr-2" />
+                                            {getApplicationCountDisplay(job)}
+                                        </div>
                                     </div>
 
                                     <p className="text-sm text-gray-600 line-clamp-2 mb-4">{job.description}</p>
@@ -276,13 +329,15 @@ const CandidateDashboard = ({ userData }) => {
                                         </button>
                                         <button
                                             onClick={() => openApplyModal(job)}
-                                            disabled={appliedJobIds.includes(job._id)}
+                                            disabled={appliedJobIds.includes(job._id) || isJobFull(job)}
                                             className={`flex-1 py-2 rounded-lg font-medium transition-colors ${appliedJobIds.includes(job._id)
-                                                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                                : "bg-blue-600 text-white hover:bg-blue-700"
+                                                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                                    : isJobFull(job)
+                                                        ? "bg-red-100 text-red-500 cursor-not-allowed"
+                                                        : "bg-blue-600 text-white hover:bg-blue-700"
                                                 }`}
                                         >
-                                            {appliedJobIds.includes(job._id) ? "Applied" : "Apply"}
+                                            {appliedJobIds.includes(job._id) ? "Applied" : isJobFull(job) ? "Full" : "Apply"}
                                         </button>
                                     </div>
                                 </div>
@@ -332,16 +387,14 @@ const CandidateDashboard = ({ userData }) => {
                                     {/* Resume Link */}
                                     {app.resume_url && (
                                         <div className="mt-4 pt-4 border-t border-gray-100">
-                                            <a
-                                                href={getResumeViewUrl(app.resume_url)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                            <button
+                                                onClick={() => openResumeViewer(app.resume_url)}
                                                 className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
                                             >
                                                 <FileText className="w-4 h-4 mr-1" />
                                                 View Your Submitted Resume
                                                 <ExternalLink className="w-3 h-3 ml-1" />
-                                            </a>
+                                            </button>
                                         </div>
                                     )}
 
@@ -374,6 +427,24 @@ const CandidateDashboard = ({ userData }) => {
                                                     Your application has been accepted. The recruiter will contact you soon.
                                                 </p>
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* Withdraw Button (only for PENDING) */}
+                                    {app.status === "PENDING" && (
+                                        <div className="mt-4 pt-4 border-t border-gray-100">
+                                            <button
+                                                onClick={() => handleWithdraw(app._id)}
+                                                disabled={withdrawing === app._id}
+                                                className="inline-flex items-center px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                {withdrawing === app._id ? (
+                                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                )}
+                                                Withdraw Application
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -486,8 +557,8 @@ const CandidateDashboard = ({ userData }) => {
                                     type="submit"
                                     disabled={!uploadedResumeId || uploading}
                                     className={`inline-flex items-center px-4 py-2 font-medium rounded-lg transition-colors ${!uploadedResumeId || uploading
-                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-blue-600 text-white hover:bg-blue-700'
                                         }`}
                                 >
                                     <Send className="w-4 h-4 mr-2" />
@@ -588,19 +659,85 @@ const CandidateDashboard = ({ userData }) => {
 
                             {/* Apply Button */}
                             <div className="pt-4 border-t border-gray-200">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-sm text-purple-600 flex items-center">
+                                        <Users className="w-4 h-4 mr-1" />
+                                        {getApplicationCountDisplay(selectedJob)}
+                                    </span>
+                                    {isJobFull(selectedJob) && (
+                                        <span className="text-sm text-red-600 font-medium">Applications closed</span>
+                                    )}
+                                </div>
                                 <button
                                     onClick={() => {
                                         setShowJobDetailModal(false);
                                         openApplyModal(selectedJob);
                                     }}
-                                    disabled={appliedJobIds.includes(selectedJob._id)}
+                                    disabled={appliedJobIds.includes(selectedJob._id) || isJobFull(selectedJob)}
                                     className={`w-full py-3 rounded-lg font-medium transition-colors ${appliedJobIds.includes(selectedJob._id)
                                             ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            : isJobFull(selectedJob)
+                                                ? 'bg-red-100 text-red-500 cursor-not-allowed'
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
                                         }`}
                                 >
-                                    {appliedJobIds.includes(selectedJob._id) ? 'Already Applied' : 'Apply Now'}
+                                    {appliedJobIds.includes(selectedJob._id) ? 'Already Applied' : isJobFull(selectedJob) ? 'Applications Full' : 'Apply Now'}
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* # Resume Viewer Modal # */}
+            {showResumeViewer && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl w-full max-w-5xl h-[90vh] flex flex-col">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">Resume Viewer</h3>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={() => setPdfZoom(Math.max(50, pdfZoom - 25))}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Zoom Out"
+                                >
+                                    <ZoomOut className="w-5 h-5" />
+                                </button>
+                                <span className="text-sm text-gray-600 min-w-[60px] text-center">{pdfZoom}%</span>
+                                <button
+                                    onClick={() => setPdfZoom(Math.min(200, pdfZoom + 25))}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Zoom In"
+                                >
+                                    <ZoomIn className="w-5 h-5" />
+                                </button>
+                                <a
+                                    href={resumeViewUrl}
+                                    download
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Download"
+                                >
+                                    <Download className="w-5 h-5" />
+                                </a>
+                                <button
+                                    onClick={() => setShowResumeViewer(false)}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    title="Close"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        {/* PDF Content */}
+                        <div className="flex-1 overflow-auto bg-gray-100 p-4">
+                            <div style={{ transform: `scale(${pdfZoom / 100})`, transformOrigin: 'top center' }}>
+                                <iframe
+                                    src={resumeViewUrl}
+                                    className="w-full bg-white shadow-lg"
+                                    style={{ height: '100vh', minWidth: '800px' }}
+                                    title="Resume"
+                                />
                             </div>
                         </div>
                     </div>

@@ -50,6 +50,11 @@ public class ApplicationService {
         // Check if job exists
         Job job = jobService.getJobById(applicationData.getJobId());
 
+        // Check if job can accept more applications
+        if (!jobService.canAcceptApplications(applicationData.getJobId())) {
+            throw new AppException("This job has reached the maximum number of applications", HttpStatus.BAD_REQUEST);
+        }
+
         // Check if already applied
         if (applicationRepository.existsByJobIdAndClerkUserId(applicationData.getJobId(), clerkUserId)) {
             throw new AppException("You have already applied to this job", HttpStatus.BAD_REQUEST);
@@ -202,5 +207,43 @@ public class ApplicationService {
     public Application getApplicationById(String applicationId) {
         return applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new AppException("Application not found", HttpStatus.NOT_FOUND));
+    }
+
+    /**
+     * Withdraw application (Candidate only)
+     * Only candidates can withdraw their own pending applications
+     */
+    public String withdrawApplication(String clerkUserId, String applicationId) {
+        log.info("Candidate {} withdrawing application: {}", clerkUserId, applicationId);
+
+        // Get application
+        Application application = getApplicationById(applicationId);
+
+        // Verify ownership
+        if (!application.getClerkUserId().equals(clerkUserId)) {
+            throw new AppException("You can only withdraw your own applications", HttpStatus.FORBIDDEN);
+        }
+
+        // Check if application can be withdrawn (only PENDING status)
+        if (!"PENDING".equals(application.getStatus())) {
+            throw new AppException("Only pending applications can be withdrawn", HttpStatus.BAD_REQUEST);
+        }
+
+        // Get job ID before deleting
+        String jobId = application.getJobId();
+
+        // Delete application
+        applicationRepository.delete(application);
+
+        // Decrement job application count
+        try {
+            jobService.decrementApplicationCount(jobId);
+        } catch (Exception e) {
+            log.warn("Could not decrement application count for job: {}", jobId);
+        }
+
+        log.info("Application withdrawn successfully");
+
+        return "Application withdrawn successfully!";
     }
 }

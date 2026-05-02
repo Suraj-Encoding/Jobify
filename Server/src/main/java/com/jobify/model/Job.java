@@ -100,6 +100,11 @@ public class Job {
     @JsonProperty("application_count")
     private Integer applicationCount;
 
+    // Maximum applications allowed (null = unlimited)
+    @Field("max_applications")
+    @JsonProperty("max_applications")
+    private Integer maxApplications;
+
     // Timestamp when job was posted
     @Field("created_at")
     @JsonProperty("created_at")

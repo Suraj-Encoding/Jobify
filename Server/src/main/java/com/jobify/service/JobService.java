@@ -71,6 +71,7 @@ public class JobService {
                 .requirements(jobData.getRequirements() != null ? jobData.getRequirements().trim() : null)
                 .benefits(jobData.getBenefits() != null ? jobData.getBenefits().trim() : null)
                 .deadline(jobData.getDeadline() != null ? jobData.getDeadline().trim() : null)
+                .maxApplications(jobData.getMaxApplications())
                 .applicationCount(0)
                 .createdAt(now)
                 .build();
@@ -115,6 +116,31 @@ public class JobService {
         job.setApplicationCount(currentCount + 1);
         job.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
         jobRepository.save(job);
+    }
+
+    /**
+     * Decrement application count for a job (when application is withdrawn)
+     */
+    public void decrementApplicationCount(String jobId) {
+        Job job = getJobById(jobId);
+        int currentCount = job.getApplicationCount() != null ? job.getApplicationCount() : 0;
+        if (currentCount > 0) {
+            job.setApplicationCount(currentCount - 1);
+            job.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
+            jobRepository.save(job);
+        }
+    }
+
+    /**
+     * Check if job can accept more applications
+     */
+    public boolean canAcceptApplications(String jobId) {
+        Job job = getJobById(jobId);
+        if (job.getMaxApplications() == null) {
+            return true; // No limit
+        }
+        int currentCount = job.getApplicationCount() != null ? job.getApplicationCount() : 0;
+        return currentCount < job.getMaxApplications();
     }
 
     /**

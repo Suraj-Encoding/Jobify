@@ -150,6 +150,16 @@ export const updateApplicationStatus = async (clerkUserId, applicationId, status
     });
 };
 
+// # Withdraw Application (Candidate) #
+export const withdrawApplication = async (clerkUserId, applicationId) => {
+    return await apiRequest(`/application/${applicationId}`, {
+        method: "DELETE",
+        headers: {
+            "clerk-user-id": clerkUserId,
+        },
+    });
+};
+
 // # Export Applications to Excel #
 export const exportApplicationsToExcel = async (clerkUserId, jobId) => {
     const url = `${API_BASE_URL}${API_VERSION}/application/job/${jobId}/export`;

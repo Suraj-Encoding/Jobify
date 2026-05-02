@@ -34,9 +34,9 @@ public class Resume {
     private String clerkUserId;
 
     // Original filename
-    @Field("filename")
-    @JsonProperty("filename")
-    private String filename;
+    @Field("file_name")
+    @JsonProperty("file_name")
+    private String fileName;
 
     // File content type (e.g., "application/pdf")
     @Field("content_type")
