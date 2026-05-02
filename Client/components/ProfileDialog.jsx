@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import { X, User, Building2, MapPin, Phone, Mail, Globe, Briefcase, GraduationCap, Linkedin, FileText, DollarSign, Calendar, Users, Info, Save, AlertCircle, Upload, Image, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { updateProfile, uploadLogo, getLogoViewUrl } from "@/lib/api";
@@ -30,6 +31,7 @@ const EDUCATION_OPTIONS = [
 
 // # 'Profile Dialog' Component #
 const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate }) => {
+    const { user: clerkUser } = useUser();
     const [loading, setLoading] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const [logoPreview, setLogoPreview] = useState(null);
@@ -224,9 +226,43 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                     {/* Account Info - Read Only */}
                     <div className="space-y-3">
                         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                            <User className="w-4 h-4" /> Account Information
+                            <User className="w-4 h-4" /> {isRecruiter ? "Recruiter" : "Candidate"} Account Information
                             <span className="text-xs font-normal text-gray-400">(Read-only)</span>
                         </h3>
+
+                        {/* Profile Image */}
+                        <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                            {isRecruiter ? (
+                                // Company Logo for Recruiter
+                                logoPreview ? (
+                                    <img src={logoPreview} alt="Company Logo" className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200" />
+                                ) : (
+                                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center">
+                                        <Building2 className="w-8 h-8 text-white" />
+                                    </div>
+                                )
+                            ) : (
+                                // Clerk Profile Image for Candidate
+                                clerkUser?.imageUrl ? (
+                                    <img src={clerkUser.imageUrl} alt="Profile" className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200" />
+                                ) : (
+                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                                        {clerkUser?.firstName?.charAt(0)?.toUpperCase() || <User className="w-8 h-8" />}
+                                    </div>
+                                )
+                            )}
+                            <div>
+                                <p className="font-semibold text-gray-900 dark:text-white">
+                                    {isRecruiter ? (userData?.company_name || "Company Name") : `${clerkUser?.firstName || ""} ${clerkUser?.lastName || ""}`}
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{userData?.email}</p>
+                                <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full ${isRecruiter ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                                    }`}>
+                                    {isRecruiter ? "RECRUITER" : "CANDIDATE"}
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
