@@ -35,6 +35,8 @@ const CandidateDashboard = ({ userData }) => {
     const [resumeViewUrl, setResumeViewUrl] = useState("");
     const [pdfZoom, setPdfZoom] = useState(100);
     const [withdrawing, setWithdrawing] = useState(null);
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
 
     // # Fetch Jobs
     const fetchJobs = async () => {
@@ -164,15 +166,23 @@ const CandidateDashboard = ({ userData }) => {
         }
     };
 
-    // # Handle Withdraw Application
-    const handleWithdraw = async (applicationId) => {
-        if (!confirm("Are you sure you want to withdraw this application?")) return;
+    // # Open Withdraw Modal
+    const openWithdrawModal = (app) => {
+        setApplicationToWithdraw(app);
+        setShowWithdrawModal(true);
+    };
 
-        setWithdrawing(applicationId);
+    // # Handle Withdraw Application
+    const handleWithdraw = async () => {
+        if (!applicationToWithdraw) return;
+
+        setWithdrawing(applicationToWithdraw._id);
         try {
-            const response = await withdrawApplication(user.id, applicationId);
+            const response = await withdrawApplication(user.id, applicationToWithdraw._id);
             if (response.success) {
                 toast.success("Application withdrawn successfully!");
+                setShowWithdrawModal(false);
+                setApplicationToWithdraw(null);
                 fetchApplications();
                 fetchJobs();
             } else {
@@ -439,11 +449,11 @@ const CandidateDashboard = ({ userData }) => {
                                         </div>
                                     )}
 
-                                    {/* Withdraw Button (only for PENDING) */}
-                                    {app.status === "PENDING" && (
+                                    {/* Withdraw Button (for PENDING and REVIEWED) */}
+                                    {(app.status === "PENDING" || app.status === "REVIEWED") && (
                                         <div className="mt-4 pt-4 border-t border-gray-100">
                                             <button
-                                                onClick={() => handleWithdraw(app._id)}
+                                                onClick={() => openWithdrawModal(app)}
                                                 disabled={withdrawing === app._id}
                                                 className="inline-flex items-center px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                                             >
@@ -769,6 +779,52 @@ const CandidateDashboard = ({ userData }) => {
                                     style={{ width: '850px', height: '1100px' }}
                                 />
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* # Withdraw Confirmation Modal # */}
+            {showWithdrawModal && applicationToWithdraw && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[80] p-4">
+                    <div className="bg-white rounded-xl max-w-md w-full p-6">
+                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                            <Trash2 className="w-6 h-6 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Withdraw Application</h3>
+                        <p className="text-gray-600 text-center mb-2">
+                            Are you sure you want to withdraw your application for:
+                        </p>
+                        <p className="text-gray-900 font-medium text-center mb-4">
+                            "{applicationToWithdraw.job?.title || 'this job'}"
+                        </p>
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+                            <p className="text-sm text-yellow-700 text-center">
+                                <span className="font-medium">Note: </span>
+                                This action cannot be undone. You can apply again if the position is still open.
+                            </p>
+                        </div>
+                        <div className="flex justify-center space-x-3">
+                            <button
+                                onClick={() => { setShowWithdrawModal(false); setApplicationToWithdraw(null); }}
+                                className="px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors border border-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleWithdraw}
+                                disabled={withdrawing}
+                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors inline-flex items-center"
+                            >
+                                {withdrawing ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Withdrawing...
+                                    </>
+                                ) : (
+                                    'Withdraw'
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
