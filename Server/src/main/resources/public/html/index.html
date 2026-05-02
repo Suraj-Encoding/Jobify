@@ -7,11 +7,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- # Website 'Title' # -->
-    <title> Jobify — Find Your Dream Job </title>
+    <title> Jobify - Find Your Dream Job </title>
 
     <!-- # Website 'Description' -->
-    <meta name="description" content="Jobify is a simple job portal for recruiters and candidates." />
+    <meta name="description" content="A simple job portal connecting recruiters with talented candidates." />
     <meta name="author" content="Jobify" />
+
+    <!-- # Website 'Logo' -->
+    <link rel="icon" href="/images/logo.png" />
+
+    <!-- # Website 'Open Graph (OG) - Social Media' Meta Tags # -->
+    <meta property="og:title" content="Jobify — Find Your Dream Job" />
+    <meta property="og:description" content="A simple job portal connecting recruiters with talented candidates." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/images/logo.png" />
+    <meta property="og:url" content="https://your-jobify.vercel.app" />
 
     <!-- # Website 'Style' # -->
     <style>
@@ -43,6 +53,16 @@
             }
         }
 
+        @keyframes shine {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -66,29 +86,45 @@
         .logo {
             width: 80px;
             height: 80px;
-            margin-bottom: 1rem;
+            object-fit: contain;
             animation: fadeIn 1s ease forwards;
         }
 
         h1 {
             font-size: 1.8rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #2563eb, #7c3aed);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
             animation: fadeIn 1s ease forwards;
             animation-delay: 0.2s;
             opacity: 0;
         }
 
         h2 {
-            font-size: 1rem;
-            font-weight: 500;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #4b5563;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 0.4s;
+            opacity: 0;
+        }
+
+        .gradient-black {
+            background: linear-gradient(to right, #000000, #4b5563);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        p.description {
+            font-size: 0.95rem;
             color: #6b7280;
             margin-bottom: 1.5rem;
             animation: fadeIn 1s ease forwards;
-            animation-delay: 0.4s;
+            animation-delay: 0.6s;
             opacity: 0;
         }
 
@@ -97,8 +133,9 @@
             justify-content: center;
             align-items: center;
             gap: 0.5rem;
+            margin-bottom: 1.5rem;
             animation: fadeIn 1s ease forwards;
-            animation-delay: 0.6s;
+            animation-delay: 0.8s;
             opacity: 0;
         }
 
@@ -117,22 +154,98 @@
             font-size: 0.8rem;
             font-weight: 600;
             color: #16a34a;
-            background: #d9f7ec;
+            background: linear-gradient(90deg, #d9f7ec, #a7f3d0, #d9f7ec);
+            background-size: 200% auto;
             border-radius: 999px;
+            animation: shine 2s linear infinite, fadeIn 1s ease forwards;
+        }
+
+        a.cta {
+            display: inline-block;
+            padding: 0.55rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            border-radius: 10px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 1s;
+            opacity: 0;
+        }
+
+        a.cta::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -75%;
+            width: 50%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.25);
+            transform: skewX(-25deg);
+            transition: all 0.5s ease;
+        }
+
+        a.cta:hover::before {
+            left: 125%;
+        }
+
+        a.cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
         }
     </style>
 </head>
 
+<!-- # Website 'Body' # -->
+
 <body>
     <div class="container">
-        <img src="/images/logo.png" alt="Jobify Logo" class="logo" />
-        <h1>Welcome to Jobify</h1>
-        <h2>Find Your Dream Job</h2>
+        <!-- # Logo -->
+        <img src="/images/logo.png" alt="Jobify" class="logo" />
+
+        <!-- # Title -->
+        <h1 class="gradient-black"> Welcome to Jobify </h1>
+
+        <!-- # Subtitle -->
+        <h2> Find Your Dream Job </h2>
+
+        <!-- # Description -->
+        <p class="description">
+            A simple job portal connecting recruiters with talented candidates.
+        </p>
+
+        <!-- # Badge -->
         <div class="badge-container">
             <div class="server-spin"></div>
-            <span class="badge">Server Running</span>
+            <span class="badge">
+                Server Running<span id="dots"></span>
+            </span>
         </div>
+
+        <!-- # CTA -->
+        <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" class="cta">
+            Go to Platform →
+        </a>
     </div>
+
+    <!-- # Website 'Script' # -->
+    <script>
+        const dots = document.getElementById("dots");
+        let dotCount = 0;
+
+        const interval = setInterval(() => {
+            dotCount = (dotCount + 1) % 4;
+            dots.textContent = ".".repeat(dotCount);
+        }, 500);
+
+        window.addEventListener("beforeunload", () => {
+            clearInterval(interval);
+        });
+    </script>
 </body>
 
 </html>
