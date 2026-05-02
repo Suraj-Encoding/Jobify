@@ -13,14 +13,15 @@ const buildUrl = (path) => {
 const apiRequest = async (path, options = {}) => {
     const url = buildUrl(path);
 
-    const defaultOptions = {
+    const config = {
+        ...options,
         headers: {
             "Content-Type": "application/json",
             ...options.headers,
         },
     };
 
-    const response = await fetch(url, { ...defaultOptions, ...options });
+    const response = await fetch(url, config);
     const data = await response.json();
 
     return data;
