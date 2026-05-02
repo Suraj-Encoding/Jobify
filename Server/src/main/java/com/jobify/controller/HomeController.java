@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Home Controller - Serves the home page and static files
@@ -26,10 +26,12 @@ public class HomeController {
      */
     @GetMapping(value = "/", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> home() throws IOException {
-        // Load index.html from resources
+        // Load index.html from resources (works inside JAR)
         Resource resource = new ClassPathResource("public/html/index.html");
-        String html = new String(Files.readAllBytes(resource.getFile().toPath()));
-        return ResponseEntity.ok(html);
+        try (InputStream inputStream = resource.getInputStream()) {
+            String html = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            return ResponseEntity.ok(html);
+        }
     }
 
     /**
@@ -44,11 +46,33 @@ public class HomeController {
             return ResponseEntity.notFound().build();
         }
 
-        byte[] content = Files.readAllBytes(Path.of(resource.getURI()));
-        MediaType mediaType = MediaTypeFactory.getMediaType(filename).orElse(MediaType.APPLICATION_OCTET_STREAM);
+        try (InputStream inputStream = resource.getInputStream()) {
+            byte[] content = inputStream.readAllBytes();
+            MediaType mediaType = MediaTypeFactory.getMediaType(filename).orElse(MediaType.APPLICATION_OCTET_STREAM);
+            
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .body(content);
+        }
+    }
+
+    /**
+     * Serve Favicon
+     * GET /favicon.ico
+     */
+    @GetMapping("/favicon.ico")
+    public ResponseEntity<byte[]> serveFavicon() throws IOException {
+        Resource resource = new ClassPathResource("public/images/logo.png");
         
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .body(content);
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            byte[] content = inputStream.readAllBytes();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(content);
+        }
     }
 }
