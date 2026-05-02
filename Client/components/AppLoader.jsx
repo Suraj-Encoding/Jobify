@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 // # 'App Loader' Component #
 const AppLoader = () => {
@@ -19,8 +20,15 @@ const AppLoader = () => {
         <>
             <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
 
-                {/* # Website 'Emoji' # */}
-                <div className="text-6xl animate-bounce mb-4">💼</div>
+                {/* # Website 'Logo' # */}
+                <Image
+                    src="/logo.png"
+                    alt="Jobify Logo"
+                    width={80}
+                    height={80}
+                    className="animate-bounce mb-4"
+                    priority
+                />
 
                 {/* # Website 'Title' & 'Description' # */}
                 <div className="flex flex-col items-center">

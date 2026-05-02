@@ -1,6 +1,7 @@
 'use client';
 
 import { UserButton } from "@clerk/nextjs";
+import Image from "next/image";
 
 // # 'Navbar' Component #
 const Navbar = ({ userData }) => {
@@ -12,7 +13,13 @@ const Navbar = ({ userData }) => {
 
                         {/* # Logo & Title # */}
                         <div className="flex items-center space-x-3">
-                            <span className="text-2xl">💼</span>
+                            <Image
+                                src="/logo.png"
+                                alt="Jobify Logo"
+                                width={32}
+                                height={32}
+                                className="object-contain"
+                            />
                             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                                 Jobify
                             </h1>
