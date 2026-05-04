@@ -170,7 +170,7 @@ public class User {
     // Founded Year
     @Field("founded_year")
     @JsonProperty("founded_year")
-    private Integer foundedYear;
+    private String foundedYear;
 
     // Company LinkedIn URL
     @Field("company_linkedin")

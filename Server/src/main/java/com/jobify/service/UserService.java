@@ -175,9 +175,7 @@ public class UserService {
             if (profileData.getCompanySize() != null) user.setCompanySize(getValueOrNull(profileData.getCompanySize()));
             if (profileData.getHeadquarters() != null) user.setHeadquarters(getValueOrNull(profileData.getHeadquarters()));
             if (profileData.getCompanyDescription() != null) user.setCompanyDescription(getValueOrNull(profileData.getCompanyDescription()));
-            if (profileData.getFoundedYear() != null) {
-                user.setFoundedYear(profileData.getFoundedYear() > 0 ? profileData.getFoundedYear() : null);
-            }
+            if (profileData.getFoundedYear() != null) user.setFoundedYear(getValueOrNull(profileData.getFoundedYear()));
             if (profileData.getCompanyLinkedin() != null) user.setCompanyLinkedin(getValueOrNull(profileData.getCompanyLinkedin()));
         }
 

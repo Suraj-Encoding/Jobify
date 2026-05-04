@@ -189,8 +189,6 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 experience_level: formData.experience_level === "Other" && formData.custom_experience_level
                     ? formData.custom_experience_level
                     : formData.experience_level,
-                // Convert founded_year to number
-                founded_year: formData.founded_year ? parseInt(formData.founded_year, 10) : null,
             };
             // Remove custom fields before sending
             delete submitData.custom_industry;
