@@ -410,6 +410,10 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                                     setShowProfileDialog(true);
                                     return;
                                 }
+                                setFormData({
+                                    title: "", description: "", location: "", salary: "", company: userData?.company_name || "",
+                                    type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                                });
                                 setShowCreateModal(true);
                             }}
                             className={`inline-flex items-center px-4 py-2 font-medium rounded-lg transition-colors ${canPostJob ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
@@ -482,7 +486,13 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                     <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-semibold text-gray-900">Post New Job</h3>
-                            <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => {
+                                setShowCreateModal(false);
+                                setFormData({
+                                    title: "", description: "", location: "", salary: "", company: userData?.company_name || "",
+                                    type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                                });
+                            }} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -656,7 +666,13 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                             <div className="flex justify-end space-x-3 pt-4">
                                 <button
                                     type="button"
-                                    onClick={() => setShowCreateModal(false)}
+                                    onClick={() => {
+                                        setShowCreateModal(false);
+                                        setFormData({
+                                            title: "", description: "", location: "", salary: "", company: userData?.company_name || "",
+                                            type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                                        });
+                                    }}
                                     className="px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
                                 >
                                     Cancel
@@ -1030,7 +1046,14 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                     <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-semibold text-gray-900">Edit Job</h3>
-                            <button onClick={() => { setShowEditModal(false); setEditingJob(null); }} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => {
+                                setShowEditModal(false);
+                                setEditingJob(null);
+                                setFormData({
+                                    title: "", description: "", location: "", salary: "", company: userData?.company_name || "",
+                                    type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                                });
+                            }} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -1197,7 +1220,14 @@ const RecruiterDashboard = ({ userData: initialUserData }) => {
                             <div className="flex justify-end space-x-3 pt-4">
                                 <button
                                     type="button"
-                                    onClick={() => { setShowEditModal(false); setEditingJob(null); }}
+                                    onClick={() => {
+                                        setShowEditModal(false);
+                                        setEditingJob(null);
+                                        setFormData({
+                                            title: "", description: "", location: "", salary: "", company: userData?.company_name || "",
+                                            type: "FULL_TIME", custom_type: "", experience: "", custom_experience: "", skills: "", requirements: "", benefits: "", deadline: "", max_applications: ""
+                                        });
+                                    }}
                                     className="px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
                                 >
                                     Cancel

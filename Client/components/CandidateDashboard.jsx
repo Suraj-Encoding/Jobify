@@ -643,7 +643,13 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                     <div className="bg-white rounded-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-semibold text-gray-900">Apply to Job</h3>
-                            <button onClick={() => setShowApplyModal(false)} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => {
+                                setShowApplyModal(false);
+                                setResumeFile(null);
+                                setUploadedResumeId(null);
+                                setCoverLetterFile(null);
+                                setUploadedCoverLetterId(null);
+                            }} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -772,7 +778,13 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                             <div className="flex justify-end space-x-3">
                                 <button
                                     type="button"
-                                    onClick={() => setShowApplyModal(false)}
+                                    onClick={() => {
+                                        setShowApplyModal(false);
+                                        setResumeFile(null);
+                                        setUploadedResumeId(null);
+                                        setCoverLetterFile(null);
+                                        setUploadedCoverLetterId(null);
+                                    }}
                                     className="px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
                                 >
                                     Cancel
