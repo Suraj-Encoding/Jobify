@@ -8,7 +8,11 @@ import 'react-toastify/dist/ReactToastify.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-        <ClerkProvider afterSignOutUrl="/sign-in">
+        <ClerkProvider
+            signInUrl="/sign-in"
+            signUpUrl="/sign-up"
+            afterSignOutUrl="/sign-in"
+        >
             <BrowserRouter>
                 <App />
             </BrowserRouter>
