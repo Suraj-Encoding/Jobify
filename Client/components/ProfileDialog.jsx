@@ -21,7 +21,7 @@ const COMPANY_SIZES = [
 // # Experience Level Options #
 const EXPERIENCE_LEVELS = [
     "Fresher (0-1 years)", "Junior (1-3 years)", "Mid-level (3-5 years)",
-    "Senior (5-8 years)", "Lead (8-10 years)", "Expert (10+ years)"
+    "Senior (5-8 years)", "Lead (8-10 years)", "Expert (10+ years)", "Other"
 ];
 
 // # Education Options #
@@ -48,6 +48,7 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
         bio: "",
         skills: "",
         experience_level: "",
+        custom_experience_level: "",
         current_title: "",
         education_degree: "",
         custom_education_degree: "",
@@ -79,6 +80,8 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
             const isCustomEducation = userData.education_degree && !EDUCATION_OPTIONS.includes(userData.education_degree);
             // Check if company_size is a custom value (not in predefined list)
             const isCustomCompanySize = userData.company_size && !COMPANY_SIZES.includes(userData.company_size);
+            // Check if experience_level is a custom value (not in predefined list)
+            const isCustomExperience = userData.experience_level && !EXPERIENCE_LEVELS.includes(userData.experience_level);
 
             setFormData({
                 phone: userData.phone || "",
@@ -86,7 +89,8 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 linkedin_url: userData.linkedin_url || "",
                 bio: userData.bio || "",
                 skills: userData.skills || "",
-                experience_level: userData.experience_level || "",
+                experience_level: isCustomExperience ? "Other" : (userData.experience_level || ""),
+                custom_experience_level: isCustomExperience ? userData.experience_level : "",
                 current_title: userData.current_title || "",
                 education_degree: isCustomEducation ? "Other" : (userData.education_degree || ""),
                 custom_education_degree: isCustomEducation ? userData.education_degree : "",
@@ -182,11 +186,17 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 company_size: formData.company_size === "Other" && formData.custom_company_size
                     ? formData.custom_company_size
                     : formData.company_size,
+                experience_level: formData.experience_level === "Other" && formData.custom_experience_level
+                    ? formData.custom_experience_level
+                    : formData.experience_level,
+                // Convert founded_year to number
+                founded_year: formData.founded_year ? parseInt(formData.founded_year, 10) : null,
             };
             // Remove custom fields before sending
             delete submitData.custom_industry;
             delete submitData.custom_education_degree;
             delete submitData.custom_company_size;
+            delete submitData.custom_experience_level;
 
             const response = await updateProfile(clerkUserId, submitData);
             if (response.success) {
@@ -575,7 +585,7 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                                         <select
                                             name="experience_level"
                                             value={formData.experience_level}
-                                            onChange={handleChange}
+                                            onChange={(e) => setFormData({ ...formData, experience_level: e.target.value, custom_experience_level: "" })}
                                             className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         >
@@ -584,6 +594,17 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                                                 <option key={level} value={level}>{level}</option>
                                             ))}
                                         </select>
+                                        {formData.experience_level === "Other" && (
+                                            <input
+                                                type="text"
+                                                name="custom_experience_level"
+                                                value={formData.custom_experience_level}
+                                                onChange={handleChange}
+                                                placeholder="Enter experience level"
+                                                className="w-full mt-2 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        )}
                                     </div>
                                 </div>
                                 <div>
