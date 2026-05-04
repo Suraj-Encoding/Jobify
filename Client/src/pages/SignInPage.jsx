@@ -1,4 +1,4 @@
-import { SignIn } from "@clerk/clerk-react";
+import { SignIn } from "@clerk/react";
 
 // # 'Sign In' Page Component #
 const SignInPage = () => {

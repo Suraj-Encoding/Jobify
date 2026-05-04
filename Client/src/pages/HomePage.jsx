@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/react";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 import Navbar from "@/components/Navbar";

@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
+import { Show, RedirectToSignIn } from '@clerk/react'
 import HomePage from './pages/HomePage'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
@@ -8,10 +8,10 @@ import SignUpPage from './pages/SignUpPage'
 const ProtectedRoute = ({ children }) => {
     return (
         <>
-            <SignedIn>{children}</SignedIn>
-            <SignedOut>
+            <Show when="signed-in">{children}</Show>
+            <Show when="signed-out">
                 <RedirectToSignIn />
-            </SignedOut>
+            </Show>
         </>
     )
 }

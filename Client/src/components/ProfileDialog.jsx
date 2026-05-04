@@ -1,7 +1,7 @@
 
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/react";
 import { X, User, Building2, MapPin, Phone, Mail, Globe, Briefcase, GraduationCap, Linkedin, FileText, DollarSign, Calendar, Users, Info, Save, AlertCircle, Upload, Image, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { updateProfile, uploadLogo, getLogoViewUrl } from "@/lib/api";
