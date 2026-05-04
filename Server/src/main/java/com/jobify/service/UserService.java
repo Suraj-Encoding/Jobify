@@ -146,37 +146,39 @@ public class UserService {
         User user = userRepository.findByClerkUserId(clerkUserId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
-        // Update common fields (only if not empty)
-        if (hasValue(profileData.getPhone())) user.setPhone(profileData.getPhone().trim());
-        if (hasValue(profileData.getLocation())) user.setLocation(profileData.getLocation().trim());
-        if (hasValue(profileData.getLinkedinUrl())) user.setLinkedinUrl(profileData.getLinkedinUrl().trim());
+        // Update common fields (null = don't update, empty = clear, value = set)
+        if (profileData.getPhone() != null) user.setPhone(getValueOrNull(profileData.getPhone()));
+        if (profileData.getLocation() != null) user.setLocation(getValueOrNull(profileData.getLocation()));
+        if (profileData.getLinkedinUrl() != null) user.setLinkedinUrl(getValueOrNull(profileData.getLinkedinUrl()));
 
         // Update candidate-specific fields
         if ("CANDIDATE".equals(user.getRole())) {
-            if (hasValue(profileData.getBio())) user.setBio(profileData.getBio().trim());
-            if (hasValue(profileData.getSkills())) user.setSkills(profileData.getSkills().trim());
-            if (hasValue(profileData.getExperienceLevel())) user.setExperienceLevel(profileData.getExperienceLevel().trim());
-            if (hasValue(profileData.getCurrentTitle())) user.setCurrentTitle(profileData.getCurrentTitle().trim());
-            if (hasValue(profileData.getEducationDegree())) user.setEducationDegree(profileData.getEducationDegree().trim());
-            if (hasValue(profileData.getEducationCollege())) user.setEducationCollege(profileData.getEducationCollege().trim());
-            if (hasValue(profileData.getPortfolioUrl())) user.setPortfolioUrl(profileData.getPortfolioUrl().trim());
-            if (hasValue(profileData.getExpectedSalary())) user.setExpectedSalary(profileData.getExpectedSalary().trim());
-            if (hasValue(profileData.getResumeId())) user.setResumeId(profileData.getResumeId().trim());
+            if (profileData.getBio() != null) user.setBio(getValueOrNull(profileData.getBio()));
+            if (profileData.getSkills() != null) user.setSkills(getValueOrNull(profileData.getSkills()));
+            if (profileData.getExperienceLevel() != null) user.setExperienceLevel(getValueOrNull(profileData.getExperienceLevel()));
+            if (profileData.getCurrentTitle() != null) user.setCurrentTitle(getValueOrNull(profileData.getCurrentTitle()));
+            if (profileData.getEducationDegree() != null) user.setEducationDegree(getValueOrNull(profileData.getEducationDegree()));
+            if (profileData.getEducationCollege() != null) user.setEducationCollege(getValueOrNull(profileData.getEducationCollege()));
+            if (profileData.getPortfolioUrl() != null) user.setPortfolioUrl(getValueOrNull(profileData.getPortfolioUrl()));
+            if (profileData.getExpectedSalary() != null) user.setExpectedSalary(getValueOrNull(profileData.getExpectedSalary()));
+            if (profileData.getResumeId() != null) user.setResumeId(getValueOrNull(profileData.getResumeId()));
         }
 
         // Update recruiter/company-specific fields
         if ("RECRUITER".equals(user.getRole())) {
-            if (hasValue(profileData.getCompanyName())) user.setCompanyName(profileData.getCompanyName().trim());
-            if (hasValue(profileData.getCompanyLogo())) user.setCompanyLogo(profileData.getCompanyLogo().trim());
-            if (hasValue(profileData.getCompanyWebsite())) user.setCompanyWebsite(profileData.getCompanyWebsite().trim());
-            if (hasValue(profileData.getCompanyEmail())) user.setCompanyEmail(profileData.getCompanyEmail().trim());
-            if (hasValue(profileData.getCompanyPhone())) user.setCompanyPhone(profileData.getCompanyPhone().trim());
-            if (hasValue(profileData.getIndustry())) user.setIndustry(profileData.getIndustry().trim());
-            if (hasValue(profileData.getCompanySize())) user.setCompanySize(profileData.getCompanySize().trim());
-            if (hasValue(profileData.getHeadquarters())) user.setHeadquarters(profileData.getHeadquarters().trim());
-            if (hasValue(profileData.getCompanyDescription())) user.setCompanyDescription(profileData.getCompanyDescription().trim());
-            if (profileData.getFoundedYear() != null && profileData.getFoundedYear() > 0) user.setFoundedYear(profileData.getFoundedYear());
-            if (hasValue(profileData.getCompanyLinkedin())) user.setCompanyLinkedin(profileData.getCompanyLinkedin().trim());
+            if (profileData.getCompanyName() != null) user.setCompanyName(getValueOrNull(profileData.getCompanyName()));
+            if (profileData.getCompanyLogo() != null) user.setCompanyLogo(getValueOrNull(profileData.getCompanyLogo()));
+            if (profileData.getCompanyWebsite() != null) user.setCompanyWebsite(getValueOrNull(profileData.getCompanyWebsite()));
+            if (profileData.getCompanyEmail() != null) user.setCompanyEmail(getValueOrNull(profileData.getCompanyEmail()));
+            if (profileData.getCompanyPhone() != null) user.setCompanyPhone(getValueOrNull(profileData.getCompanyPhone()));
+            if (profileData.getIndustry() != null) user.setIndustry(getValueOrNull(profileData.getIndustry()));
+            if (profileData.getCompanySize() != null) user.setCompanySize(getValueOrNull(profileData.getCompanySize()));
+            if (profileData.getHeadquarters() != null) user.setHeadquarters(getValueOrNull(profileData.getHeadquarters()));
+            if (profileData.getCompanyDescription() != null) user.setCompanyDescription(getValueOrNull(profileData.getCompanyDescription()));
+            if (profileData.getFoundedYear() != null) {
+                user.setFoundedYear(profileData.getFoundedYear() > 0 ? profileData.getFoundedYear() : null);
+            }
+            if (profileData.getCompanyLinkedin() != null) user.setCompanyLinkedin(getValueOrNull(profileData.getCompanyLinkedin()));
         }
 
         user.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
@@ -187,9 +189,12 @@ public class UserService {
     }
 
     /**
-     * Helper method to check if a string has actual value (not null and not empty)
+     * Helper method: returns trimmed value if not empty, otherwise null (to clear the field)
      */
-    private boolean hasValue(String str) {
-        return str != null && !str.trim().isEmpty();
+    private String getValueOrNull(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return null;
+        }
+        return str.trim();
     }
 }

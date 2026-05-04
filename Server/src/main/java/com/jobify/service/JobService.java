@@ -160,42 +160,42 @@ public class JobService {
             throw new AppException("You can only update your own jobs", HttpStatus.FORBIDDEN);
         }
 
-        // Update fields
+        // Update fields (null = don't update, empty = clear, value = set)
         if (jobData.getTitle() != null && !jobData.getTitle().trim().isEmpty()) {
             job.setTitle(jobData.getTitle().trim());
         }
         if (jobData.getDescription() != null) {
-            job.setDescription(jobData.getDescription().trim());
+            job.setDescription(getValueOrNull(jobData.getDescription()));
         }
         if (jobData.getLocation() != null) {
-            job.setLocation(jobData.getLocation().trim());
+            job.setLocation(getValueOrNull(jobData.getLocation()));
         }
         if (jobData.getSalary() != null) {
-            job.setSalary(jobData.getSalary().trim());
+            job.setSalary(getValueOrNull(jobData.getSalary()));
         }
         if (jobData.getCompany() != null) {
-            job.setCompany(jobData.getCompany().trim());
+            job.setCompany(getValueOrNull(jobData.getCompany()));
         }
         if (jobData.getType() != null) {
-            job.setType(jobData.getType().trim());
+            job.setType(getValueOrNull(jobData.getType()));
         }
         if (jobData.getExperience() != null) {
-            job.setExperience(jobData.getExperience().trim());
+            job.setExperience(getValueOrNull(jobData.getExperience()));
         }
         if (jobData.getSkills() != null) {
-            job.setSkills(jobData.getSkills().trim());
+            job.setSkills(getValueOrNull(jobData.getSkills()));
         }
         if (jobData.getRequirements() != null) {
-            job.setRequirements(jobData.getRequirements().trim());
+            job.setRequirements(getValueOrNull(jobData.getRequirements()));
         }
         if (jobData.getBenefits() != null) {
-            job.setBenefits(jobData.getBenefits().trim());
+            job.setBenefits(getValueOrNull(jobData.getBenefits()));
         }
         if (jobData.getDeadline() != null) {
-            job.setDeadline(jobData.getDeadline().trim());
+            job.setDeadline(getValueOrNull(jobData.getDeadline()));
         }
         if (jobData.getMaxApplications() != null) {
-            job.setMaxApplications(jobData.getMaxApplications());
+            job.setMaxApplications(jobData.getMaxApplications() > 0 ? jobData.getMaxApplications() : null);
         }
 
         job.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
@@ -203,6 +203,16 @@ public class JobService {
 
         log.info("Job updated successfully");
         return "Job updated successfully!";
+    }
+
+    /**
+     * Helper method: returns trimmed value if not empty, otherwise null
+     */
+    private String getValueOrNull(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return null;
+        }
+        return str.trim();
     }
 
     /**
