@@ -1,7 +1,7 @@
-'use client';
+
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import { toast } from "react-toastify";
 import { getMyJobs, createJob, updateJob, deleteJob, getApplicationsByJob, updateApplicationStatus, exportApplicationsToExcel, getResumeViewUrl, getUser, getLogoViewUrl, getCoverLetterViewUrl } from "@/lib/api";
 import { Plus, Briefcase, Users, Trash2, Eye, X, CheckCircle, XCircle, Clock, Download, FileText, ExternalLink, Edit2, Table2, Building2, Settings, AlertTriangle, FileUp } from "lucide-react";

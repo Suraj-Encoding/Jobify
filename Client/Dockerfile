@@ -1,6 +1,6 @@
-## DockerFile: For "Next.js" Application ##
+## DockerFile: For "React + Vite" Application ##
 
-# Start from the latest "Node" base image (alpine)
+# Build stage
 FROM node:18-alpine AS builder
 
 # Set the 'app' as a 'CWD' inside the 'container'
@@ -15,23 +15,27 @@ RUN npm ci
 # Copy the rest of the application
 COPY . .
 
-# Build the 'Next.js' application
+# Build the 'Vite' application
 RUN npm run build
 
-# Start from the latest "Node" base image (alpine) for production
-FROM node:18-alpine AS runner
-
-# Set the 'app' as a 'CWD' inside the 'container'
-WORKDIR /app
+# Production stage using nginx
+FROM nginx:alpine AS runner
 
 # Copy the 'build' output from the 'builder' stage
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose the port "3000" to the 'outside' world
-EXPOSE 3000
+# Copy nginx configuration for SPA routing
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-# Run the 'Next.js' application
-CMD ["npm", "start"]
+# Expose the port "80" to the 'outside' world
+EXPOSE 80
+
+# Run nginx
+CMD ["nginx", "-g", "daemon off;"]

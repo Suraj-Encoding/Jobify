@@ -1,6 +1,4 @@
-'use client'
-
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import AppLoader from "@/components/AppLoader";
 import Navbar from "@/components/Navbar";

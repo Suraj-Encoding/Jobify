@@ -1,7 +1,6 @@
-'use client';
 
-import { UserButton } from "@clerk/nextjs";
-import Image from "next/image";
+
+import { UserButton } from "@clerk/clerk-react";
 
 // # 'Navbar' Component #
 const Navbar = ({ userData }) => {
@@ -13,7 +12,7 @@ const Navbar = ({ userData }) => {
 
                         {/* # Logo & Title # */}
                         <div className="flex items-center space-x-3">
-                            <Image
+                            <img
                                 src="/logo.png"
                                 alt="Jobify Logo"
                                 width={32}

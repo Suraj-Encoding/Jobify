@@ -23,19 +23,15 @@
 
 # Typescript 'Cache' File
 *.tsbuildinfo
-next-env.d.ts
 
 # 'Dependencies' Folder
 /node_modules
 
-# Next 'Production Build' Folder
-/out
+# Vite 'Production Build' Folder
+/dist
 
 # 'Coverage' Folder
 /coverage
 
 # 'Logs' Folder
 /logs
-
-# Next 'Runtime' Folder
-/.next

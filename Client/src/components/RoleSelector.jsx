@@ -1,7 +1,7 @@
-'use client';
+
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import { toast } from "react-toastify";
 import { setUserRole } from "@/lib/api";
 import { Briefcase, User } from "lucide-react";

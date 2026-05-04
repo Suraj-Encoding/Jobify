@@ -1,7 +1,6 @@
-'use client';
+
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 
 // # 'App Loader' Component #
 const AppLoader = () => {
@@ -21,13 +20,12 @@ const AppLoader = () => {
             <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
 
                 {/* # Website 'Logo' # */}
-                <Image
+                <img
                     src="/logo.png"
                     alt="Jobify Logo"
                     width={80}
                     height={80}
                     className="object-contain animate-fade-in"
-                    priority
                 />
 
                 {/* # Website 'Title' & 'Description' # */}

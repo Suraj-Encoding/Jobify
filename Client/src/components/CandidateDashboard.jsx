@@ -1,7 +1,7 @@
-'use client';
+
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import { toast } from "react-toastify";
 import { getAllJobs, applyToJob, getMyApplications, uploadResume, getResumeViewUrl, withdrawApplication, getUser, getLogoViewUrl, uploadCoverLetter, getCoverLetterViewUrl } from "@/lib/api";
 import { Briefcase, MapPin, DollarSign, Building, X, Send, FileText, Clock, CheckCircle, XCircle, Upload, ExternalLink, Calendar, Award, Loader2, Users, Download, Trash2, User, Settings, AlertTriangle, Globe, FileUp } from "lucide-react";

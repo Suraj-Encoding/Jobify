@@ -1,8 +1,8 @@
 // ## API Functions ##
 
 // # API Configuration #
-const API_BASE_URL = process.env.NEXT_PUBLIC_SERVER_BASE_URL || "http://localhost:3001";
-const API_VERSION = process.env.NEXT_PUBLIC_SERVER_API_VERSION || "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_SERVER_BASE_URL || "http://localhost:3001";
+const API_VERSION = import.meta.env.VITE_SERVER_API_VERSION || "/api/v1";
 
 // # Build API URL #
 const buildUrl = (path) => {
