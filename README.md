@@ -8,7 +8,7 @@ Jobify is a simple, full-stack job portal application built with Java Spring Boo
 ## 🚀 Live Deployments
 
 - 🌐 **Frontend (Vercel)**  
-  👉 https://usejobify.vercel.app
+  👉 https://usemyjobify.vercel.app
 
 - ⚙️ **Backend (Render)**  
   👉 https://jobify-34qa.onrender.com
