@@ -113,6 +113,31 @@ public class UserService {
     }
 
     /**
+     * Update user from Clerk webhook (user.updated event)
+     */
+    public String updateUserFromClerk(ClerkUserRequest.ClerkUserData clerkUser) {
+        log.info("Updating user from Clerk webhook, ID: {}", clerkUser.getId());
+
+        User user = userRepository.findByClerkUserId(clerkUser.getId())
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Update basic info from Clerk
+        if (clerkUser.getFirstName() != null) user.setFirstName(clerkUser.getFirstName());
+        if (clerkUser.getLastName() != null) user.setLastName(clerkUser.getLastName());
+
+        // Update email if available
+        if (clerkUser.getEmailAddresses() != null && !clerkUser.getEmailAddresses().isEmpty()) {
+            user.setEmail(clerkUser.getEmailAddresses().get(0).getEmailAddress());
+        }
+
+        user.setUpdatedAt(TimeUtils.getCurrentTimeInIST());
+        userRepository.save(user);
+
+        log.info("User updated successfully from Clerk webhook");
+        return "User updated successfully!";
+    }
+
+    /**
      * Update user profile
      */
     public User updateProfile(String clerkUserId, User profileData) {

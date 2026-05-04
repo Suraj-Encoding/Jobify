@@ -42,6 +42,9 @@ public class UserController {
             case "user.created":
                 result = userService.createUser(clerkUser);
                 break;
+            case "user.updated":
+                result = userService.updateUserFromClerk(clerkUser);
+                break;
             case "user.deleted":
                 result = userService.deleteUser(clerkUser.getId());
                 break;
