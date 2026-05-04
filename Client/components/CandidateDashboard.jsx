@@ -318,9 +318,9 @@ const CandidateDashboard = ({ userData: initialUserData }) => {
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-red-800 dark:text-red-200">Complete Your Profile to Apply for Jobs</h3>
-                                    <p className="text-sm text-red-700 dark:text-red-300">You need at least 80% profile completion to apply. Current: <strong>{profileCompletion}%</strong></p>
-                                    <div className="mt-2 w-full max-w-xs bg-red-200 dark:bg-red-900 rounded-full h-2">
-                                        <div className="bg-red-600 h-2 rounded-full transition-all" style={{ width: `${profileCompletion}%` }} />
+                                    <p className="text-sm text-red-700 dark:text-red-300">You need at least 80% profile completion to apply. Current: <strong className={profileCompletion < 50 ? 'text-red-600' : profileCompletion < 80 ? 'text-yellow-600' : 'text-green-600'}>{profileCompletion}%</strong></p>
+                                    <div className="mt-2 w-full max-w-xs bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                        <div className={`h-2 rounded-full transition-all ${profileCompletion < 50 ? 'bg-red-500' : profileCompletion < 80 ? 'bg-yellow-500' : 'bg-green-500'}`} style={{ width: `${profileCompletion}%` }} />
                                     </div>
                                 </div>
                             </div>
