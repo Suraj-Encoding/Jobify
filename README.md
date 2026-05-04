@@ -1,7 +1,7 @@
 <!-- # "Jobify" Readme File # -->
 # 🕸️ Welcome to Jobify - Modern Job Portal 🕸️
 
-Jobify is a simple, full-stack job portal application built with Java Spring Boot (backend), MongoDB (data store), Clerk (authentication), and Next.js (frontend). It allows recruiters to post jobs and candidates to apply, with a clean and beginner-friendly codebase.
+Jobify is a simple, full-stack job portal application built with Java Spring Boot (backend), MongoDB (data store), Clerk (authentication), and React.js (frontend). It allows recruiters to post jobs and candidates to apply, with a clean and beginner-friendly codebase.
 
 ---
 
@@ -20,7 +20,7 @@ Jobify is a simple, full-stack job portal application built with Java Spring Boo
 - **Backend:** Java (Spring Boot)
 - **Database:** MongoDB
 - **Auth:** Clerk
-- **Frontend:** Next.js
+- **Frontend:** React.js
 
 ---
 
@@ -32,14 +32,14 @@ Jobify is a simple, full-stack job portal application built with Java Spring Boo
 - Application status tracking (Pending, Accepted, Rejected)
 - User management and authentication via Clerk
 - MongoDB for reliable storage of users, jobs, and applications
-- Next.js frontend with responsive UI and Clerk integration
+- React.js frontend with responsive UI and Clerk integration
 
 ---
 
 ## Project Structure (high level)
 
 - `Server/` — Java Spring Boot backend, API handlers, services, and MongoDB integration
-- `Client/` — Next.js frontend, components, and Clerk auth routes
+- `Client/` — React.js frontend, components, and Clerk auth routes
 - `README.md` — This file
 
 ---
@@ -90,11 +90,16 @@ mvn spring-boot:run
 ```bash
 cd Client
 npm install
-npm run build 
 npm run dev
 ```
 
-The frontend typically runs on `http://localhost:3000` and the backend on `http://localhost:3001` (configurable).
+To build for production:
+
+```bash
+npm run build
+```
+
+The frontend typically runs on `http://localhost:3000` (dev) and the backend on `http://localhost:3001` (configurable).
 
 ---
 
@@ -125,7 +130,7 @@ Below are quick deployment flows for the frontend (Vercel) and backend (Render).
   1. Create a Vercel project and connect it to this repository.
   2. Set the Project Root to `Client` (or import as a monorepo and point the app to `Client`).
   3. Build command: `npm run build`
-  4. Output directory: leave default (Next.js handled by Vercel).
+  4. Output directory: `dist`
   5. Configure required settings and secrets in Vercel (Dashboard → Settings → Environment Variables).
   6. Deploy — Vercel will run builds on every push.
 
@@ -141,7 +146,7 @@ Below are quick deployment flows for the frontend (Vercel) and backend (Render).
 
 Tips:
 
-- Use Vercel for the Next.js frontend (serverless/edge-optimized) and Render (or similar) for the Java backend.
+- Use Vercel for the React.js frontend and Render (or similar) for the Java backend.
 - Keep production secrets in the platform's environment manager — never commit them.
 - If using webhooks (Clerk), configure callback URLs in Clerk to point to your deployed `POST /api/v1/user/webhook` endpoint.
 
