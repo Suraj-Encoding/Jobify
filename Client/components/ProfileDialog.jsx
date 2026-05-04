@@ -15,7 +15,7 @@ const INDUSTRIES = [
 // # Company Size Options #
 const COMPANY_SIZES = [
     "1-10 employees", "11-50 employees", "51-200 employees",
-    "201-500 employees", "501-1000 employees", "1000+ employees"
+    "201-500 employees", "501-1000 employees", "1000+ employees", "Other"
 ];
 
 // # Experience Level Options #
@@ -63,19 +63,22 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
         industry: "",
         custom_industry: "",
         company_size: "",
+        custom_company_size: "",
         headquarters: "",
         company_description: "",
         founded_year: "",
         company_linkedin: ""
     });
 
-    // # Effect: Populate form data from userData #
+    // # Effect: Populate form data from userData (reset on dialog open) #
     useEffect(() => {
-        if (userData) {
+        if (isOpen && userData) {
             // Check if industry is a custom value (not in predefined list)
             const isCustomIndustry = userData.industry && !INDUSTRIES.includes(userData.industry);
             // Check if education_degree is a custom value (not in predefined list)
             const isCustomEducation = userData.education_degree && !EDUCATION_OPTIONS.includes(userData.education_degree);
+            // Check if company_size is a custom value (not in predefined list)
+            const isCustomCompanySize = userData.company_size && !COMPANY_SIZES.includes(userData.company_size);
 
             setFormData({
                 phone: userData.phone || "",
@@ -97,7 +100,8 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 company_phone: userData.company_phone || "",
                 industry: isCustomIndustry ? "Other" : (userData.industry || ""),
                 custom_industry: isCustomIndustry ? userData.industry : "",
-                company_size: userData.company_size || "",
+                company_size: isCustomCompanySize ? "Other" : (userData.company_size || ""),
+                custom_company_size: isCustomCompanySize ? userData.company_size : "",
                 headquarters: userData.headquarters || "",
                 company_description: userData.company_description || "",
                 founded_year: userData.founded_year || "",
@@ -110,7 +114,7 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 setLogoPreview(null);
             }
         }
-    }, [userData]);
+    }, [isOpen, userData]);
 
     // # Handle Logo Upload #
     const handleLogoUpload = async (e) => {
@@ -175,10 +179,14 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                 education_degree: formData.education_degree === "Other" && formData.custom_education_degree
                     ? formData.custom_education_degree
                     : formData.education_degree,
+                company_size: formData.company_size === "Other" && formData.custom_company_size
+                    ? formData.custom_company_size
+                    : formData.company_size,
             };
             // Remove custom fields before sending
             delete submitData.custom_industry;
             delete submitData.custom_education_degree;
+            delete submitData.custom_company_size;
 
             const response = await updateProfile(clerkUserId, submitData);
             if (response.success) {
@@ -328,7 +336,7 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                                         <select
                                             name="company_size"
                                             value={formData.company_size}
-                                            onChange={handleChange}
+                                            onChange={(e) => setFormData({ ...formData, company_size: e.target.value, custom_company_size: "" })}
                                             className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                             required
                                         >
@@ -337,6 +345,17 @@ const ProfileDialog = ({ isOpen, onClose, userData, clerkUserId, onProfileUpdate
                                                 <option key={size} value={size}>{size}</option>
                                             ))}
                                         </select>
+                                        {formData.company_size === "Other" && (
+                                            <input
+                                                type="text"
+                                                name="custom_company_size"
+                                                value={formData.custom_company_size}
+                                                onChange={handleChange}
+                                                placeholder="Enter company size"
+                                                className="w-full mt-2 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Founded Year</label>
